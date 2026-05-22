@@ -1,0 +1,20 @@
+# Secrets
+.env
+.env.backup-*
+
+# Logs (trop gros)
+*.log
+bot.log
+monitor.log
+test_live.log
+test_planorder.log
+
+# Runtime
+state.json
+trades.json
+__pycache__/
+*.pyc
+
+# Backups auto
+*.backup-*
+*.bak_*
