@@ -257,17 +257,21 @@ def append_trade(coin: str, direction: str, entry_price: float,
             trades = json.loads(TRADES_FILE.read_text())
         except Exception:
             pass
-    pnl = 0.0
+    pnl_pct  = 0.0
+    pnl_usdt = 0.0
     if entry_price and exit_price:
-        mult = 1 if direction == 'LONG' else -1
-        pnl  = (exit_price - entry_price) / entry_price * mult * LEVERAGE * 100
+        mult     = 1 if direction == 'LONG' else -1
+        pnl_pct  = (exit_price - entry_price) / entry_price * mult * LEVERAGE * 100
+        cs       = get_contract_size(coin)
+        pnl_usdt = (exit_price - entry_price) * qty * cs * mult
     trades.append({
         'coin':        coin,
         'direction':   direction,
         'entry_price': entry_price,
         'exit_price':  exit_price,
         'qty':         qty,
-        'pnl':         round(pnl, 2),
+        'pnl':         round(pnl_usdt, 4),
+        'pnl_pct':     round(pnl_pct, 2),
         'reason':      reason,
         'date':        datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M'),
     })
@@ -941,10 +945,13 @@ class MEXCBot:
         if entry_price and exit_price:
             mult        = 1 if direction == 'LONG' else -1
             pnl_pct     = (exit_price - entry_price) / entry_price * mult * LEVERAGE * 100
-            capital_pct = pnl_pct * MARGIN_PCT   # impact réel sur capital total
+            cs          = get_contract_size(coin)
+            pnl_usdt    = (exit_price - entry_price) * qty * cs * mult
+            capital_pct = pnl_pct * MARGIN_PCT
             emoji       = '✅' if pnl_pct > 0 else '❌'
             pnl_str = (
-                f'\nPnL marge:  {pnl_pct:+.1f}% {emoji}'
+                f'\nPnL: {pnl_usdt:+.2f} USDT {emoji}'
+                f'\nPnL marge:  {pnl_pct:+.1f}%'
                 f'\nPnL capital:{capital_pct:+.2f}% du capital total'
             )
 
@@ -1050,8 +1057,8 @@ class MEXCBot:
                     price  = float(ticker.get('lastPrice', 0))
 
                     mult = 1 if direction == 'LONG' else -1
-                    pnl  = (price - ep) / ep * mult * LEVERAGE * 100 if ep else 0
-                    sign = '+' if pnl >= 0 else ''
+                    pnl_pct = (price - ep) / ep * mult * LEVERAGE * 100 if ep else 0
+                    sign = '+' if pnl_pct >= 0 else ''
 
                     ce_str = ''
                     atr_entry_h = pos.get('atr_entry', 0.0)
@@ -1081,7 +1088,7 @@ class MEXCBot:
                     await tg_send(
                         f'[SUIVI] <b>{coin} {direction}</b>\n'
                         f'Entrée: ${ep:.4f} | Prix: ${price:.4f}\n'
-                        f'PnL: {sign}{pnl:.1f}%\n'
+                        f'PnL: {sign}{pnl_pct:.1f}%\n'
                         f'Hold: {hours_held:.1f}h / {MHH}h max'
                         + ce_str + c6_hourly
                     )
