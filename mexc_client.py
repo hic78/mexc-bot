@@ -63,7 +63,7 @@ class MEXCRestClient:
             log.warning(f'GET {endpoint} ERREUR: code={resp.get("code")} msg={resp.get("message")!r}')
         return resp
 
-    def _post(self, endpoint: str, body: dict) -> dict:
+    def _post(self, endpoint: str, body: dict, silent: bool = False) -> dict:
         ts = str(int(time.time() * 1000))
         body_str = json.dumps(body, separators=(',', ':'))
         sig = self._sign(ts, body_str)
@@ -86,7 +86,7 @@ class MEXCRestClient:
             log.error(f'POST {endpoint} réponse non-JSON: {r.text[:500]}')
             return {'success': False, 'code': -1, 'message': r.text[:300]}
         log.debug(f'POST {endpoint} success={resp.get("success")} code={resp.get("code")} data={resp.get("data")}')
-        if not resp.get('success'):
+        if not resp.get('success') and not silent:
             log.warning(f'POST {endpoint} ERREUR: code={resp.get("code")} msg={resp.get("message")!r}')
         return resp
 
@@ -204,11 +204,11 @@ class MEXCRestClient:
             'price':        0,
         }
         # Essayer d'abord le endpoint v1, puis v2 si échec code=9999
-        result = self._post('/api/v1/private/planorder/place', body)
+        result = self._post('/api/v1/private/planorder/place', body, silent=True)
         if not result.get('success') and result.get('code') == 9999:
             log.info('plan_order v1 code=9999 → retry avec /planorder/place/v2')
             body2 = dict(body)
-            result = self._post('/api/v1/private/planorder/place/v2', body2)
+            result = self._post('/api/v1/private/planorder/place/v2', body2, silent=True)
         return result
 
     def cancel_plan_order(self, order_id: str) -> dict:

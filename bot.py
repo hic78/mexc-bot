@@ -807,15 +807,20 @@ class MEXCBot:
             if not sl_result.get('success'):
                 log.info(f'[{coin}] SL exchange non disponible (code={sl_result.get("code")}) — client-side SL actif @ {sl_price:.6f}')
 
-            # Vérifier position sur exchange
-            pos_live = self.rest.get_positions(sym)
+            # Vérifier position sur exchange (retry x3 — lag exchange ~1-3s)
+            pos_live = None
+            for _chk in range(3):
+                await asyncio.sleep(1)
+                pos_live = self.rest.get_positions(sym)
+                if pos_live:
+                    break
             if pos_live:
                 p = pos_live[0]
                 log.info(f'[{coin}] position confirmée exchange: vol={p.get("vol")} '
                          f'type={p.get("positionType")} openPrice={p.get("openPrice")} '
                          f'margin={p.get("im","?")} unrealPnl={p.get("unrealizedPnl","?")}')
             else:
-                log.warning(f'[{coin}] position non trouvée sur exchange après fill!')
+                log.warning(f'[{coin}] position non trouvée sur exchange après 3 tentatives')
 
             pos_new = {
                 'direction':   direction,
@@ -906,7 +911,7 @@ class MEXCBot:
                     return
                 else:
                     log.warning(f'[{coin}] PARTIAL attempt={attempt} failed: {result.get("code")} {result.get("message","")!r}')
-                    await asyncio.sleep(2)
+                    await asyncio.sleep(15 if result.get('code') == 510 else 2)
             except Exception as e:
                 log.error(f'[{coin}] PARTIAL exception attempt={attempt}: {e}')
                 await asyncio.sleep(2)

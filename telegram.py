@@ -20,15 +20,20 @@ log = logging.getLogger('mexc')
 async def tg_send(msg: str):
     if not TG_TOKEN or not TG_CHAT:
         return
-    try:
-        async with aiohttp.ClientSession() as s:
-            await s.post(
-                f'https://api.telegram.org/bot{TG_TOKEN}/sendMessage',
-                json={'chat_id': TG_CHAT, 'text': msg, 'parse_mode': 'HTML'},
-                timeout=aiohttp.ClientTimeout(total=10),
-            )
-    except Exception as e:
-        log.warning(f'TG send error: {e}')
+    for _attempt in range(3):
+        try:
+            async with aiohttp.ClientSession() as s:
+                r = await s.post(
+                    f'https://api.telegram.org/bot{TG_TOKEN}/sendMessage',
+                    json={'chat_id': TG_CHAT, 'text': msg, 'parse_mode': 'HTML'},
+                    timeout=aiohttp.ClientTimeout(total=10),
+                )
+                if r.status == 200:
+                    return
+                log.warning(f'TG send HTTP {r.status} attempt={_attempt+1}')
+        except Exception as e:
+            log.warning(f'TG send error attempt={_attempt+1}: {type(e).__name__}: {e}')
+        await asyncio.sleep(3)
 
 
 class TelegramCommands:
