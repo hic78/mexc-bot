@@ -15,7 +15,7 @@ BASE_REST = 'https://contract.mexc.com'
 BASE_WS   = 'wss://contract.mexc.com/edge'
 
 # ── Coins ─────────────────────────────────────────────
-COINS = ['DOGE', 'SOL', 'US', 'ETH', 'BTC', 'ZEC', 'AVAX', 'RUNE', 'H', 'CHZ', 'XRP', 'TAO', 'BILL']
+COINS = ['DOGE', 'SOL', 'US', 'ETH', 'BTC', 'ZEC', 'AVAX', 'RUNE', 'H', 'CHZ', 'XRP', 'TAO', 'FET', 'HYPE']
 
 # ── Contract sizes (1 contrat = X token) ─────────────
 CONTRACT_SIZES = {
@@ -40,9 +40,7 @@ CONTRACT_SIZES = {
     'TAO':  0.01,   # 1 contrat = 0.01 TAO (vérifié API MEXC: contractSize=0.01)
     'CHZ':  1.0,    # 1 contrat = 1 CHZ (vérifié API MEXC: contractSize=1)
     'H':    1.0,    # 1 contrat = 1 H (vérifié API MEXC: contractSize=1)
-    'BILL': 100.0,  # 1 contrat = 100 BILL (vérifié API MEXC: contractSize=100)
     'RUNE': 1.0,    # 1 contrat = 1 RUNE (vérifié API MEXC: contractSize=1)
-    'EDEN': 1.0,    # 1 contrat = 1 EDEN (vérifié API MEXC: contractSize=1)
 }
 
 # ── Timeframes ────────────────────────────────────────
