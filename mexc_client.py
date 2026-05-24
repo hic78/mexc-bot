@@ -182,7 +182,7 @@ class MEXCRestClient:
 
     def set_leverage(self, symbol: str, leverage: int) -> dict:
         body = {'symbol': symbol, 'leverage': leverage, 'openType': 1}
-        return self._post('/api/v1/private/position/change_leverage', body)
+        return self._post('/api/v1/private/position/change_leverage', body, silent=True)
 
     # ── Plan orders (SL/TP exchange) ──────────────────
     def place_plan_order(self, symbol: str, side: int, vol: float,

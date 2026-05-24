@@ -355,8 +355,10 @@ class MEXCBot:
                 result = self.rest.set_leverage(sym, LEVERAGE)
                 if result.get('success'):
                     log.info(f'  Leverage {LEVERAGE}x set: {coin}')
+                elif result.get('code') == 600:
+                    log.info(f'  set_leverage {coin}: code=600 — OK (leverage fixé à l\'ouverture du trade)')
                 else:
-                    log.warning(f'  set_leverage {coin}: code={result.get("code")} (position ouverte?)')
+                    log.warning(f'  set_leverage {coin}: code={result.get("code")} msg={result.get("message","")!r}')
             except Exception as e:
                 log.warning(f'  set_leverage {coin}: {e}')
 

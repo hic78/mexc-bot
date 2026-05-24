@@ -25,7 +25,7 @@ CONTRACT_SIZES = {
     'ZEC':  0.01,   # 1 contrat = 0.01 ZEC
     'JUP':  1.0,
     'BLUR': 1.0,
-    'FET':  1.0,
+    'FET':  10.0,   # contractSize=10 (vérifié API MEXC 2026-05-24)
     'US':   10.0,   # 1 contrat = 10 US (vérifié API MEXC: contractSize=10)
     'LAB':  10.0,   # 1 contrat = 10 LAB (vérifié API MEXC: contractSize=10)
     'BTC':  0.0001,
