@@ -283,8 +283,10 @@ class MEXCBot:
     def __init__(self):
         self.rest            = MEXCRestClient()
         self._state          = load_state()
-        # Restaure les coins ajoutés dynamiquement (persistés dans state.json)
-        self.runtime_coins   = list(self._state.get('__coins__', COINS))
+        # Sync runtime_coins: conserve coins encore dans config, purge ceux retirés, ajoute les nouveaux
+        _saved = self._state.get('__coins__', COINS)
+        _cfg   = set(COINS)
+        self.runtime_coins = [c for c in _saved if c in _cfg] + [c for c in COINS if c not in set(_saved)]
         self.positions       = self._load_positions_from_state()
         self.candles    = {
             c: {'1h': deque(maxlen=VP_WIN + 100), '1m': deque(maxlen=700), '4h': deque(maxlen=200)}
@@ -307,6 +309,10 @@ class MEXCBot:
         self._state['__coins__'] = self.runtime_coins  # persiste la liste dynamique
         for coin in self.runtime_coins:
             self._state.setdefault(coin, {})['position'] = self.positions.get(coin)
+        # Purge les clés ghost (coins retirés de config.py)
+        for _k in list(self._state.keys()):
+            if _k != '__coins__' and _k not in self.runtime_coins:
+                del self._state[_k]
         save_state(self._state)
 
     # ── Startup ───────────────────────────────────────────────────────────────
