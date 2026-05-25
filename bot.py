@@ -288,6 +288,7 @@ class MEXCBot:
         _cfg   = set(COINS)
         self.runtime_coins = [c for c in _saved if c in _cfg] + [c for c in COINS if c not in set(_saved)]
         self.positions       = self._load_positions_from_state()
+        self._opening_coins = set()  # lock anti-double-open
         self.candles    = {
             c: {'1h': deque(maxlen=VP_WIN + 100), '1m': deque(maxlen=700), '4h': deque(maxlen=200)}
             for c in self.runtime_coins
@@ -729,9 +730,10 @@ class MEXCBot:
 
     # ── Open position ─────────────────────────────────────────────────────────
     async def open_position(self, coin: str, direction: str, atr_val: float = 0.0):
-        if coin in self.positions:
+        if coin in self.positions or coin in self._opening_coins:
             log.warning(f"[{coin}] open_position: position deja ouverte — double-open ignore")
             return
+        self._opening_coins.add(coin)
         sym  = to_mexc_symbol(coin)
         side = 1 if direction == 'LONG' else 3  # 1=Open Long, 3=Open Short
 
@@ -875,6 +877,8 @@ class MEXCBot:
         except Exception as e:
             log.error(f'[{coin}] Exception open: {e}', exc_info=True)
             await tg_send(f'EXCEPTION ouverture {coin}: {e}')
+        finally:
+            self._opening_coins.discard(coin)
 
     # ── Cycle 6: Partial close ────────────────────────────────────────────────
     async def _partial_close(self, coin: str, direction: str, qty_to_close: int, reason: str):
