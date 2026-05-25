@@ -858,7 +858,7 @@ class MEXCBot:
             log.info(f'[{coin}] state sauvegardé: {json.dumps(pos_new, default=str)}')
             if qty < 5:
                 log.warning(f'[{coin}] qty={qty} < 5 → partials Cycle6 désactivés, chandelier seul (min qty=5 requis)')
-                await tg_send(f'⚠️ {coin} qty={qty} — partials OFF (qty<5), chandelier gère')
+                await tg_send(f'⚠️ {coin} qty={qty} — partials OFF (qty inf 5), chandelier gère')
 
             tp_price = fill_price * (1 + (TP_PCT if direction == 'LONG' else -TP_PCT))
             log.info(f'[{coin}] OPEN {direction} {LEVERAGE}x @ {fill_price:.6f} qty={qty} '
