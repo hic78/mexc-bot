@@ -35,7 +35,7 @@ CONTRACT_SIZES = {
     'ADA':  10.0,
     'AVAX': 0.1,
     'MATIC':10.0,
-    'LINK': 1.0,    # 1 contrat = 1 LINK (verifie API MEXC)
+    'LINK': 0.1,    # 1 contrat = 0.1 LINK (verifie API MEXC 2026-05-26)
     'LTC':  0.01,
     'ATOM': 1.0,
     'TAO':  0.01,   # 1 contrat = 0.01 TAO (verifie API MEXC: contractSize=0.01)

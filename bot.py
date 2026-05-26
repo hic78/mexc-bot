@@ -103,7 +103,7 @@ def calc_ema(values: list, period: int) -> float:
 
 
 def calc_atr_series(candles: list, period: int) -> list:
-    """Retourne la série d'ATR (SMA rolling) — identique Champion v4 tr.rolling(14).mean()."""
+    """ATR Wilder EMA (k=1/period) — identique bt_v6_multi_gen._precompute."""
     if len(candles) < period + 1:
         return []
     trs = []
@@ -112,9 +112,12 @@ def calc_atr_series(candles: list, period: int) -> list:
         trs.append(max(h - l, abs(h - pc), abs(l - pc)))
     if len(trs) < period:
         return []
-    atrs = []
-    for i in range(period - 1, len(trs)):
-        atrs.append(sum(trs[i - period + 1:i + 1]) / period)
+    k = 1.0 / period          # Wilder smoothing: k=1/14=0.0714 (vs EMA standard k=2/15)
+    atr = sum(trs[:period]) / period  # seed = SMA sur les 'period' premières TR
+    atrs = [atr]
+    for tr in trs[period:]:
+        atr = tr * k + atr * (1 - k)
+        atrs.append(atr)
     return atrs
 
 
@@ -177,7 +180,7 @@ def compute_signal(candles_1h: list, candles_4h: list, coin: str = '',
         return 'NONE', 0.0
     current_atr = atr_series[-1]
 
-    # VP filter: si ATR > VP_PCT percentile → trop volatil, skip
+    # VP filter: si ATR > VP_PCT percentile → trop volatil, skip (parité backtest line 969: atr[i] > vol_thr[i])
     # Exclut la barre courante comme Champion v4 : atr_series.iloc[-VP_WIN-1:-1]
     atr_window = atr_series[-(VP_WIN + 1):-1]
     vp_threshold = None
@@ -185,7 +188,7 @@ def compute_signal(candles_1h: list, candles_4h: list, coin: str = '',
         vp_threshold = np.percentile(atr_window, VP_PCT)
         log.debug(f'{tag} VP filter: ATR={current_atr:.6f} threshold(p{VP_PCT})={vp_threshold:.6f} window={len(atr_window)}')
         if current_atr > vp_threshold:
-            log.info(f'{tag} VP filter ACTIF: ATR {current_atr:.6f} > {vp_threshold:.6f} — signal ignoré')
+            log.info(f'{tag} VP filter: ATR {current_atr:.6f} > {vp_threshold:.6f} — trop volatil (top {100-VP_PCT}%), skip')
             return 'NONE', 0.0
 
     # Donchian breakout (D5, sur closes précédents)
@@ -246,35 +249,6 @@ def aggregate_to_5m(bars_1m: list) -> list:
             bk['v'] += b['v']
     return [v for _, v in sorted(buckets.items())]
 
-
-def chandelier_exit(candles_1m: list, period: int = 441, mult: float = 1.0,
-                    coin: str = '', direction: str = '',
-                    atr_entry: float = 0.0, sl_price: float = 0.0) -> str:
-    """Chandelier Exit identique Champion v4:
-    - ATR fixe (1H SMA-ATR stocké à l'entrée, jamais recalculé)
-    - Trigger sur LOW wick (LONG) ou HIGH wick (SHORT)
-    - Guard: niveau chandelier doit être plus serré que le SL"""
-    if len(candles_1m) < period + 1:
-        log.debug(f'[{coin}] chandelier: pas assez de barres ({len(candles_1m)} < {period+1})')
-        return 'HOLD'
-    if atr_entry <= 0:
-        log.debug(f'[{coin}] chandelier: atr_entry invalide ({atr_entry})')
-        return 'HOLD'
-    recent     = candles_1m[-(period + 1):]  # CH_P+1 barres — identique Champion v4: H[ws:j+1]
-    chan_long  = max(c['h'] for c in recent) - mult * atr_entry
-    chan_short = min(c['l'] for c in recent) + mult * atr_entry
-    if direction == 'LONG':
-        wick = candles_1m[-1]['l']
-        if wick <= chan_long and (sl_price <= 0 or chan_long > sl_price):
-            log.debug(f'[{coin}] chandelier LONG EXIT: low={wick:.6f} <= chan={chan_long:.6f} atr_entry={atr_entry:.6f}')
-            return 'EXIT'
-    elif direction == 'SHORT':
-        wick = candles_1m[-1]['h']
-        if wick >= chan_short and (sl_price <= 0 or chan_short < sl_price):
-            log.debug(f'[{coin}] chandelier SHORT EXIT: high={wick:.6f} >= chan={chan_short:.6f} atr_entry={atr_entry:.6f}')
-            return 'EXIT'
-    log.debug(f'[{coin}] chandelier({period},{mult}): chan_long={chan_long:.6f} chan_short={chan_short:.6f} atr_entry={atr_entry:.6f} → HOLD')
-    return 'HOLD'
 
 
 # ── Position sizing ───────────────────────────────────────────────────────────
@@ -338,7 +312,7 @@ class MEXCBot:
         self.positions       = self._load_positions_from_state()
         self._opening_coins = set()  # lock anti-double-open
         self.candles    = {
-            c: {'1h': deque(maxlen=VP_WIN + 100), '1m': deque(maxlen=700), '4h': deque(maxlen=200)}
+            c: {'1h': deque(maxlen=VP_WIN + 100), '1m': deque(maxlen=700), '4h': deque(maxlen=EMA_4H_PERIOD + 50)}
             for c in self.runtime_coins
         }
         self.ws         = MEXCWebSocket(on_kline_callback=self.on_kline)
@@ -524,7 +498,7 @@ class MEXCBot:
         self.candles[coin] = {
             '1h': deque(maxlen=VP_WIN + 100),
             '1m': deque(maxlen=700),
-            '4h': deque(maxlen=200),
+            '4h': deque(maxlen=EMA_4H_PERIOD + 50),
         }
         self._entered_in_bar[coin] = None
         loaded = {}
@@ -1013,7 +987,7 @@ class MEXCBot:
         log.error(f'[{coin}] PARTIAL CLOSE [{reason}] FAILED 3 attempts')
 
     # ── Close position ────────────────────────────────────────────────────────
-    async def close_position(self, coin: str, direction: str, reason: str = 'chandelier'):
+    async def close_position(self, coin: str, direction: str, reason: str = 'TRAIL'):
         pos = self.positions.get(coin)
         if not pos:
             return
