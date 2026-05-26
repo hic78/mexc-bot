@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # bot.py — MEXC Futures Bot (parité Champion v4)
-# Strategie : Donchian D5 + VP filter + EMA + Chandelier 1.0/441×1m + Time exit 96h
+# Strategie : Backtest v6 Optimal (C139) — D3 EMA(239/281) ATR-trail(0.24/0.0087) ADX(19min7.7) VP80 7x
 # Exchange   : MEXC Futures (contract.mexc.com)
 # ISOLATION  : NE JAMAIS TOUCHER /root/champion-v4-bot/
 #
@@ -23,8 +23,8 @@ import numpy as np
 
 from config import (
     COINS, TF_SIGNAL, TF_CHANDELIER, TIMEFRAME_MAP,
-    DONCHIAN_PERIOD, CH_MULTIPLIER, CH_PERIOD,
-    EMA_1H_PERIOD, EMA_4H_PERIOD, ATR_PERIOD,
+    DONCHIAN_PERIOD, EMA_1H_PERIOD, EMA_4H_PERIOD, ATR_PERIOD,
+    ADX_PERIOD, ADX_MIN, TRAIL_ACT, TRAIL_DIST, ATR_SL_MULT, MIN_HOLD_HOURS,
     LEVERAGE, CAPITAL_PCT, SL_PCT, TP_PCT, MARGIN_PCT, MAX_POSITIONS,
     MHH, VP_PCT, VP_WIN,
     DRY_RUN, TG_TOKEN, TG_CHAT,
@@ -118,6 +118,46 @@ def calc_atr_series(candles: list, period: int) -> list:
     return atrs
 
 
+def calc_adx(candles: list, period: int) -> float:
+    """Wilder ADX — identique bt_v6_multi_gen._calc_adx. Retourne la derniere valeur."""
+    period = max(2, int(period))
+    n = len(candles)
+    if n < 2 * period + 2:
+        return 0.0
+    highs  = [c['h'] for c in candles]
+    lows   = [c['l'] for c in candles]
+    closes = [c['c'] for c in candles]
+    tr  = [0.0] * n
+    pdm = [0.0] * n
+    ndm = [0.0] * n
+    for i in range(1, n):
+        h, l, pc = highs[i], lows[i], closes[i-1]
+        tr[i] = max(h - l, abs(h - pc), abs(l - pc))
+        up   = highs[i] - highs[i-1]
+        down = lows[i-1] - lows[i]
+        if up > down and up > 0:
+            pdm[i] = up
+        if down > up and down > 0:
+            ndm[i] = down
+    atr_w = sum(tr[1:period+1])
+    pdm_w = sum(pdm[1:period+1])
+    ndm_w = sum(ndm[1:period+1])
+    dx_vals = []
+    for i in range(period + 1, n):
+        atr_w = atr_w - atr_w / period + tr[i]
+        pdm_w = pdm_w - pdm_w / period + pdm[i]
+        ndm_w = ndm_w - ndm_w / period + ndm[i]
+        pdi = 100 * pdm_w / atr_w if atr_w > 0 else 0.0
+        ndi = 100 * ndm_w / atr_w if atr_w > 0 else 0.0
+        dx_vals.append(100 * abs(pdi - ndi) / (pdi + ndi) if pdi + ndi > 0 else 0.0)
+    if len(dx_vals) < period:
+        return 0.0
+    adx = sum(dx_vals[:period]) / period
+    for dx in dx_vals[period:]:
+        adx = (adx * (period - 1) + dx) / period
+    return adx
+
+
 def compute_signal(candles_1h: list, candles_4h: list, coin: str = '',
                    override_price: float = None):
     """Donchian D5 + EMA filter + VP filter (ATR percentile).
@@ -168,6 +208,14 @@ def compute_signal(candles_1h: list, candles_4h: list, coin: str = '',
     if any(x == 0.0 for x in [ema_1h, ema_4h, current_atr]):
         log.debug(f'{tag} EMA/ATR zéro — NONE')
         return 'NONE', 0.0
+
+    # ADX filter: skip ranging markets (entry only)
+    if ADX_PERIOD > 0 and ADX_MIN > 0:
+        adx_val = calc_adx(candles_1h[:-1], ADX_PERIOD)  # shift(1): barre precedente
+        if adx_val < ADX_MIN:
+            log.debug(f'{tag} ADX filter: {adx_val:.1f} < {ADX_MIN} — signal ignore')
+            return 'NONE', 0.0
+        log.debug(f'{tag} ADX={adx_val:.1f} >= {ADX_MIN} — OK')
 
     if close > dc_high and close > ema_1h and close > ema_4h:
         log.info(f'{tag} SIGNAL LONG: close {close:.6f} > dc_high {dc_high:.6f} | ema1h {ema_1h:.6f} | ema4h {ema_4h:.6f}')
@@ -403,7 +451,7 @@ class MEXCBot:
             f'🚀 <b>MEXC Bot démarré</b>\n'
             f'Coins: {" + ".join(self.runtime_coins)}\n'
             f'DRY_RUN: {DRY_RUN}{bal_str}\n'
-            f'Stratégie: Donchian D{DONCHIAN_PERIOD} + VP{VP_PCT} + Chandelier {CH_MULTIPLIER}/{CH_PERIOD}×1m + {MHH}h\n'
+            f'Stratégie: BT v6 Optimal D{DONCHIAN_PERIOD} EMA({EMA_1H_PERIOD}/{EMA_4H_PERIOD}) Trail({TRAIL_ACT:.4f}/{TRAIL_DIST}) ADX({ADX_PERIOD}min{ADX_MIN}) VP{VP_PCT} {LEVERAGE}x\n'
             f'Cycle 6: {c6_str}\n'
             f'CS: {cs_lines}\n'
             f'/help pour les commandes'
@@ -631,41 +679,70 @@ class MEXCBot:
                 await self.close_position(coin, direction, reason='TP_72')
                 return
 
-        # 4. Chandelier exit — barres depuis ENTRÉE uniquement (parité Champion v4)
-        # Champion v4: cur = bars_3m[bars_3m.index >= entry_ts]  → inactive avant CH_P barres
-        # MEXC: même logique avec 1m bars — 441 barres depuis entrée ≈ 7.35h minimum
+        # 4. ATR Trail exit — actif apres MIN_HOLD_HOURS depuis entree (Backtest v6 Optimal)
+        # Activation: gain >= TRAIL_ACT * ATR_entry/entry_price
+        # Stop: best_price - TRAIL_DIST * ATR_courant (LONG) / + (SHORT)
+
+        # Mise a jour best_price sur chaque tick (intrabar et bar_closed)
+        if bars_1m:
+            if direction == 'LONG':
+                pos['best_price'] = max(pos.get('best_price', entry_price), bars_1m[-1]['h'])
+            else:
+                pos['best_price'] = min(pos.get('best_price', entry_price), bars_1m[-1]['l'])
+            self._persist_positions()
+        best_price = pos.get('best_price', entry_price)
+
         if not bar_closed:
-            log.debug(f'[{coin}] intrabar tick: chandelier skip | bars={n_bars} price={current_price:.6f}')
             return
 
+        # Verifier le delai minimum
         try:
-            entry_dt_ch = datetime.fromisoformat(entry_time)
-            if entry_dt_ch.tzinfo is None:
-                entry_dt_ch = entry_dt_ch.replace(tzinfo=timezone.utc)
-            entry_unix = int(entry_dt_ch.timestamp())
-        except Exception as e:
-            log.warning(f'[{coin}] entry_time parse: {e}')
+            entry_dt_tr = datetime.fromisoformat(entry_time)
+            if entry_dt_tr.tzinfo is None:
+                entry_dt_tr = entry_dt_tr.replace(tzinfo=timezone.utc)
+            hours_held_tr = (datetime.now(timezone.utc) - entry_dt_tr).total_seconds() / 3600
+        except Exception:
+            hours_held_tr = 999.0
+
+        if hours_held_tr < MIN_HOLD_HOURS:
+            log.debug(f'[{coin}] trail INACTIF: {hours_held_tr:.1f}h < {MIN_HOLD_HOURS}h min')
             return
 
-        bars_since_entry = [b for b in bars_1m if b['t'] >= entry_unix]
-        n_since = len(bars_since_entry)
+        # Calcul seuil d'activation
+        if not entry_price or not atr_entry:
+            return
+        act_t = TRAIL_ACT * atr_entry / entry_price
+        gain  = (best_price - entry_price) / entry_price * (1 if direction == 'LONG' else -1)
 
-        if n_since <= CH_PERIOD:  # identique Champion v4: j >= CH_P → n > CH_P
-            log.debug(f'[{coin}] chandelier INACTIF: {n_since}/{CH_PERIOD} barres depuis entrée (~{n_since/60:.1f}h / 7.35h)')
+        if gain < act_t:
+            log.debug(f'[{coin}] trail: gain={gain*100:.3f}% < act_t={act_t*100:.3f}% → HOLD')
             return
 
-        log.debug(f'[{coin}] chandelier ACTIF: {n_since} barres depuis entrée >{CH_PERIOD}')
-        ce = chandelier_exit(bars_since_entry, CH_PERIOD, CH_MULTIPLIER,
-                             coin=coin, direction=direction,
-                             atr_entry=atr_entry, sl_price=sl_price)
-        if ce == 'EXIT':
-            log.info(f'[{coin}] Chandelier EXIT {direction} @ {current_price:.6f}')
-            await self.close_position(coin, direction, reason='chandelier')
+        # Trail actif — stop = best_price +/- TRAIL_DIST * ATR_courant
+        bars_1h_t = list(self.candles[coin]['1h'])
+        atr_1h_t  = calc_atr_series(bars_1h_t, ATR_PERIOD)
+        atr_cur   = atr_1h_t[-1] if atr_1h_t else atr_entry
+
+        if direction == 'LONG':
+            trail_stop = best_price - TRAIL_DIST * atr_cur
+            if current_price <= trail_stop:
+                log.info(f'[{coin}] TRAIL EXIT LONG: price={current_price:.6f} <= trail={trail_stop:.6f} '
+                         f'best={best_price:.6f} gain={gain*100:.2f}% atr={atr_cur:.6f}')
+                await self.close_position(coin, direction, reason='TRAIL')
+            else:
+                pnl_pct_t = (current_price - entry_price) / entry_price * LEVERAGE * 100
+                log.debug(f'[{coin}] TRAIL ACTIF LONG: trail={trail_stop:.6f} price={current_price:.6f} '
+                          f'gain={gain*100:.2f}% pnl={pnl_pct_t:+.2f}%')
         else:
-            if coin in self.positions:
-                mult = 1 if direction == 'LONG' else -1
-                pnl_pct = (current_price - entry_price) / entry_price * mult * LEVERAGE * 100 if entry_price else 0
-                log.debug(f'[{coin}] HOLD: ce={ce} price={current_price:.6f} ep={entry_price:.6f} pnl={pnl_pct:+.2f}%')
+            trail_stop = best_price + TRAIL_DIST * atr_cur
+            if current_price >= trail_stop:
+                log.info(f'[{coin}] TRAIL EXIT SHORT: price={current_price:.6f} >= trail={trail_stop:.6f} '
+                         f'best={best_price:.6f} gain={gain*100:.2f}% atr={atr_cur:.6f}')
+                await self.close_position(coin, direction, reason='TRAIL')
+            else:
+                pnl_pct_t = (current_price - entry_price) / entry_price * (-1) * LEVERAGE * 100
+                log.debug(f'[{coin}] TRAIL ACTIF SHORT: trail={trail_stop:.6f} price={current_price:.6f} '
+                          f'gain={gain*100:.2f}% pnl={pnl_pct_t:+.2f}%')
 
     # ── Signal loop ───────────────────────────────────────────────────────────
     async def signal_loop(self):
@@ -756,7 +833,8 @@ class MEXCBot:
             balance     = self.rest.get_balance()
             qty         = calc_qty(balance, price, coin)
             mult        = 1 if direction == 'LONG' else -1
-            sl_price    = price * (1 - mult * SL_PCT)
+            sl_price    = (price - mult * ATR_SL_MULT * atr_val
+                          if atr_val > 0 else price * (1 - mult * SL_PCT))
 
             log.info(f'[{coin}] open_position: direction={direction} price={price:.6f} '
                      f'balance={balance:.4f} qty={qty} sl_price={sl_price:.6f}')
@@ -781,6 +859,7 @@ class MEXCBot:
                     'sl_price':    sl_price,
                     'sl_id':       None,
                     'qty':         qty,
+                    'best_price':  price,
                 }
                 self.positions[coin] = pos_new
                 self._persist_positions()
@@ -808,7 +887,8 @@ class MEXCBot:
             # Prix après fill
             ticker2    = self.rest.get_ticker(sym)
             fill_price = float(ticker2.get('lastPrice', price))
-            sl_price   = fill_price * (1 - mult * SL_PCT)
+            sl_price   = (fill_price - mult * ATR_SL_MULT * atr_val
+                         if atr_val > 0 else fill_price * (1 - mult * SL_PCT))
             log.info(f'[{coin}] fill estimé: {fill_price:.6f} sl={sl_price:.6f}')
 
             # SL sur exchange (plan order)
@@ -844,26 +924,25 @@ class MEXCBot:
                 'sl_price':    sl_price,
                 'sl_id':       sl_id,
                 'qty':         qty,
-                'qty_initial': qty,  # Cycle 6: track original qty pour partials
-                # Cycle 6 trackers
-                'cycle6_enabled':  True,
-                # qty < 5: partials mathematiquement impossibles (ratios entiers=0) → skip dès l'entrée
-                'partial_done':    qty < 5,
-                'partial_lvl1':    qty < 5,
-                'partial_lvl2':    qty < 5,
-                'breakeven_moved': False,
+                'qty_initial': qty,
+                'best_price':  fill_price,
+                # Cycle 6 desactive (Backtest v6 Optimal)
+                'cycle6_enabled':  False,
+                'partial_done':    True,
+                'partial_lvl1':    True,
+                'partial_lvl2':    True,
+                'breakeven_moved': True,
             }
             self.positions[coin] = pos_new
             self._persist_positions()
             log.info(f'[{coin}] state sauvegardé: {json.dumps(pos_new, default=str)}')
             if qty < 5:
-                log.warning(f'[{coin}] qty={qty} < 5 → partials Cycle6 désactivés, chandelier seul (min qty=5 requis)')
-                await tg_send(f'⚠️ {coin} qty={qty} — partials OFF (qty inf 5), chandelier gère')
+                log.warning(f'[{coin}] qty={qty} < 5 → trail actif, position sous-optimale')
 
             tp_price = fill_price * (1 + (TP_PCT if direction == 'LONG' else -TP_PCT))
             log.info(f'[{coin}] OPEN {direction} {LEVERAGE}x @ {fill_price:.6f} qty={qty} '
                      f'sl={sl_price:.6f} tp={tp_price:.6f} sl_id={sl_id}')
-            c6_open = (f'\nCycle6: ✅ ACTIVE — MP_L1+{MP_L1_PCT*100:.2f}%/{MP_L1_RATIO*100:.0f}% MP_L2+{MP_L2_PCT*100:.2f}%/{MP_L2_RATIO*100:.0f}% BE+{BREAKEVEN_TRIGGER_PCT*100:.0f}%') if qty >= 5 else ''
+            c6_open = f'\nTrail: activation a {TRAIL_ACT*atr_val/fill_price*100:.3f}% gain | SL ATR x{ATR_SL_MULT:.2f}' if atr_val > 0 and fill_price > 0 else ''
             await tg_send(
                 f'OPEN {direction} {coin} {LEVERAGE}x\n'
                 f'Prix: ${fill_price:.4f} | Qty: {qty} (cs={get_contract_size(coin)})\n'
@@ -1072,12 +1151,12 @@ class MEXCBot:
 
                     ce_str = ''
                     atr_entry_h = pos.get('atr_entry', 0.0)
-                    sl_price_h  = pos.get('sl_price', 0.0)
-                    if len(bars_1m) >= CH_PERIOD + 1 and atr_entry_h > 0:
-                        ce = chandelier_exit(bars_1m, CH_PERIOD, CH_MULTIPLIER,
-                                             direction=direction,
-                                             atr_entry=atr_entry_h, sl_price=sl_price_h)
-                        ce_str = f'\nChandelier: {ce}'
+                    best_h = pos.get('best_price', ep)
+                    if atr_entry_h > 0 and ep > 0:
+                        act_t_h = TRAIL_ACT * atr_entry_h / ep
+                        gain_h  = (best_h - ep) / ep * (1 if direction == 'LONG' else -1)
+                        trail_s = 'ACTIF' if gain_h >= act_t_h else f'attente gain {act_t_h*100:.2f}%'
+                        ce_str  = f'\nTrail: {trail_s} (best={best_h:.4f})'
 
                     c6_hourly = ''
                     if pos.get('cycle6_enabled'):

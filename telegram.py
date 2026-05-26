@@ -9,7 +9,7 @@ from pathlib import Path
 
 import aiohttp
 
-from config import TG_TOKEN, TG_CHAT, COINS, LEVERAGE, DONCHIAN_PERIOD, CH_PERIOD, CH_MULTIPLIER
+from config import TG_TOKEN, TG_CHAT, COINS, LEVERAGE, DONCHIAN_PERIOD, ADX_PERIOD, ADX_MIN, TRAIL_ACT, TRAIL_DIST, ATR_SL_MULT, MIN_HOLD_HOURS
 from config import EMA_1H_PERIOD, EMA_4H_PERIOD, SL_PCT, TP_PCT, MARGIN_PCT, CAPITAL_PCT, MAX_POSITIONS, DRY_RUN, MHH, VP_PCT, VP_WIN
 
 BOT_DIR  = Path('/root/mexc-bot')
@@ -157,9 +157,15 @@ class TelegramCommands:
                 except Exception:
                     pass
 
-                n_bars     = len(self.bot.candles.get(coin, {}).get('1m', []))
-                chan_hours  = n_bars / 60
-                chan_ok     = '✅' if n_bars >= CH_PERIOD else f'⚠️ {n_bars}/{CH_PERIOD}'
+                atr_e_h    = pos.get('atr_entry', 0.0)
+                best_h     = pos.get('best_price', entry_price or 0.0)
+                ep         = entry_price or 0.0
+                if atr_e_h > 0 and ep > 0:
+                    act_t  = TRAIL_ACT * atr_e_h / ep
+                    gain   = (best_h - ep) / ep * mult
+                    trail_ok = '✅ ACTIF' if gain >= act_t else f'⏳ {gain*100:.2f}%/{act_t*100:.2f}%'
+                else:
+                    trail_ok = '⏳ init'
 
                 try:
                     ticker = await asyncio.to_thread(
@@ -182,7 +188,7 @@ class TelegramCommands:
                     + f'  Prix: ${price:.4f}  PnL: {pnl_str}\n'
                     + (f'  SL: ${sl_price:.4f} (-{SL_PCT*100:.0f}% prix) | TP: ${tp_price:.4f} (+{TP_PCT*100:.0f}% prix)\n' if sl_price and tp_price else '')
                     + f'  Tenu: {hours_held} / {MHH}h\n'
-                    + f'  Chan: {CH_PERIOD}×1m = {chan_hours:.1f}h {chan_ok}\n'
+                    + f'  Trail: {trail_ok} | min_hold={MIN_HOLD_HOURS}h\n'
                 )
         await self._reply('\n'.join(lines))
 
@@ -204,9 +210,15 @@ class TelegramCommands:
                 sl_price    = pos.get('sl_price', 0)
                 mult        = 1 if direction == 'LONG' else -1
                 tp_price    = entry_price * (1 + mult * TP_PCT) if entry_price else 0
-                n_bars     = len(self.bot.candles.get(coin, {}).get('1m', []))
-                chan_hours  = n_bars / 60
-                chan_ok     = '✅' if n_bars >= CH_PERIOD else f'⚠️ {n_bars}/{CH_PERIOD}'
+                atr_e_h    = pos.get('atr_entry', 0.0)
+                best_h     = pos.get('best_price', entry_price or 0.0)
+                ep         = entry_price or 0.0
+                if atr_e_h > 0 and ep > 0:
+                    act_t  = TRAIL_ACT * atr_e_h / ep
+                    gain   = (best_h - ep) / ep * mult
+                    trail_ok = '✅ ACTIF' if gain >= act_t else f'⏳ {gain*100:.2f}%/{act_t*100:.2f}%'
+                else:
+                    trail_ok = '⏳ init'
                 try:
                     ticker = await asyncio.to_thread(
                         self.bot.rest.get_ticker, f'{coin}_USDT'
@@ -222,7 +234,7 @@ class TelegramCommands:
                             f'  PnL marge:  {pnl_pct:+.1f}% {emoji}\n'
                             f'  PnL capital:{capital_pct:+.2f}% du capital total\n'
                             + (f'  SL: ${sl_price:.4f} (-{SL_PCT*100:.0f}% prix) | TP: ${tp_price:.4f} (+{TP_PCT*100:.0f}% prix)\n' if sl_price and tp_price else '')
-                            + f'  Chan: {CH_PERIOD}×1m = {chan_hours:.1f}h {chan_ok}'
+                            + f'  Trail: {trail_ok} | min_hold={MIN_HOLD_HOURS}h'
                         )
                     else:
                         lines.append(f'{coin} {direction}: prix entrée non dispo')
@@ -330,7 +342,8 @@ class TelegramCommands:
             f'Marge/trade: {MARGIN_PCT*100:.0f}% capital (×{LEVERAGE}={MARGIN_PCT*LEVERAGE*100:.0f}% notional)\n'
             f'Max positions simultanées: {max_pos} (1 par coin)\n'
             f'Donchian: D{DONCHIAN_PERIOD} barres 1h\n'
-            f'Chandelier: {CH_PERIOD}×1m × {CH_MULTIPLIER}×ATR ({CH_PERIOD}min = {CH_PERIOD//60}h{CH_PERIOD%60}m)\n'
+            f'Trail: act={TRAIL_ACT} dist={TRAIL_DIST} SL={ATR_SL_MULT}×ATR | min_hold={MIN_HOLD_HOURS}h\n'
+            f'ADX: period={ADX_PERIOD} min={ADX_MIN}\n'
             f'EMA 1h: {EMA_1H_PERIOD} | EMA 4h: {EMA_4H_PERIOD}\n'
             f'VP filter: {VP_PCT}e pct sur {VP_WIN} barres 1h | Max hold: {MHH}h\n'
             f'DRY_RUN: {DRY_RUN}'

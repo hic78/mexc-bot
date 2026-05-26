@@ -1,5 +1,6 @@
 # config.py — MEXC Bot
 # NE PAS CONFONDRE AVEC /root/champion-v4-bot/
+# Strategie : Backtest v6 Optimal — C139 (D3 EMA239/281 ATR trail ADX19min7.7)
 
 import os, requests, logging
 from dotenv import load_dotenv
@@ -14,8 +15,8 @@ SECRET_KEY = os.getenv('MEXC_SECRET_KEY', '')
 BASE_REST = 'https://contract.mexc.com'
 BASE_WS   = 'wss://contract.mexc.com/edge'
 
-# ── Coins ─────────────────────────────────────────────
-COINS = ['DOGE', 'SOL', 'US', 'ETH', 'BTC', 'ZEC', 'AVAX', 'RUNE', 'H', 'CHZ', 'XRP', 'TAO', 'FET', 'HYPE']
+# ── Coins (Backtest v6 Optimal — 6 actifs MEXC) ──────
+COINS = ['AVAX', 'BTC', 'ETH', 'SOL', 'LINK', 'DOGE']
 
 # ── Contract sizes (1 contrat = X token) ─────────────
 CONTRACT_SIZES = {
@@ -25,29 +26,28 @@ CONTRACT_SIZES = {
     'ZEC':  0.01,   # 1 contrat = 0.01 ZEC
     'JUP':  1.0,
     'BLUR': 1.0,
-    'FET':  10.0,   # contractSize=10 (vérifié API MEXC 2026-05-24)
-    'US':   10.0,   # 1 contrat = 10 US (vérifié API MEXC: contractSize=10)
-    'LAB':  10.0,   # 1 contrat = 10 LAB (vérifié API MEXC: contractSize=10)
+    'FET':  10.0,   # contractSize=10 (verifie API MEXC 2026-05-24)
+    'US':   10.0,   # 1 contrat = 10 US (verifie API MEXC: contractSize=10)
+    'LAB':  10.0,   # 1 contrat = 10 LAB (verifie API MEXC: contractSize=10)
     'BTC':  0.0001,
     'ETH':  0.01,
-    'XRP':  1.0,    # 1 contrat = 1 XRP (vérifié API MEXC: contractSize=1)
+    'XRP':  1.0,    # 1 contrat = 1 XRP (verifie API MEXC: contractSize=1)
     'ADA':  10.0,
     'AVAX': 0.1,
     'MATIC':10.0,
-    'LINK': 1.0,
+    'LINK': 1.0,    # 1 contrat = 1 LINK (verifie API MEXC)
     'LTC':  0.01,
     'ATOM': 1.0,
-    'TAO':  0.01,   # 1 contrat = 0.01 TAO (vérifié API MEXC: contractSize=0.01)
-    'CHZ':  1.0,    # 1 contrat = 1 CHZ (vérifié API MEXC: contractSize=1)
-    'H':    1.0,    # 1 contrat = 1 H (vérifié API MEXC: contractSize=1)
-    'RUNE': 1.0,    # 1 contrat = 1 RUNE (vérifié API MEXC: contractSize=1)
+    'TAO':  0.01,   # 1 contrat = 0.01 TAO (verifie API MEXC: contractSize=0.01)
+    'CHZ':  1.0,    # 1 contrat = 1 CHZ (verifie API MEXC: contractSize=1)
+    'H':    1.0,    # 1 contrat = 1 H (verifie API MEXC: contractSize=1)
+    'RUNE': 1.0,    # 1 contrat = 1 RUNE (verifie API MEXC: contractSize=1)
 }
 
 # ── Timeframes ────────────────────────────────────────
 # MEXC utilise Min1/Min60/Hour4 — PAS 1m/1h comme Binance
-# Min3 non supporté MEXC → Min1 utilisé à la place (441×1m = 441min ≡ 147×3m = 441min)
-TF_SIGNAL     = '1h'   # Donchian signal → Min60
-TF_CHANDELIER = '1m'   # Chandelier Exit → Min1
+TF_SIGNAL     = '1h'   # Donchian signal -> Min60
+TF_CHANDELIER = '1m'   # trailing exit -> Min1
 
 TIMEFRAME_MAP = {
     '1m': 'Min1', '3m': 'Min5', '5m': 'Min5',
@@ -55,29 +55,38 @@ TIMEFRAME_MAP = {
     '4h': 'Hour4', '8h': 'Hour8', '1d': 'Day1',
 }
 
-# ── Stratégie — CONFIG#2 validée (parité Champion v4) ─
-# Chandelier: 441×1m = 441min ≡ 147×3m = 441min (parité Champion v4)
-DONCHIAN_PERIOD = 5       # D5
-CH_MULTIPLIER   = 1.0     # Chandelier multiplier
-CH_PERIOD       = 441     # 441×1m = 441min ≡ 147×3m (parité Champion v4)
-EMA_1H_PERIOD   = 100     # Filtre EMA 1h
-EMA_4H_PERIOD   = 38      # Filtre EMA 4h
-ATR_PERIOD      = 14      # Période ATR
+# ── Strategie — Backtest v6 Optimal (C139) ───────────
+# D3 EMA4H=281 EMA1H=239 trail_act=0.2437 trail_dist=0.0087
+# ATR_SL=1.93x  ADX(19) min=7.7  VOL_PCT=80  LEV=7x
+DONCHIAN_PERIOD = 3       # D3 (was D5)
+EMA_1H_PERIOD   = 239     # EMA 1h filtre (was 100)
+EMA_4H_PERIOD   = 281     # EMA 4h filtre (was 38)
+ATR_PERIOD      = 14      # Periode ATR
+
+# ADX trend filter (entry only)
+ADX_PERIOD      = 19      # Wilder ADX period
+ADX_MIN         = 7.7     # Minimum ADX to enter (ranging = skip)
+
+# ATR trailing stop (replaces Chandelier period-based)
+TRAIL_ACT       = 0.2437  # Activate trail when gain >= TRAIL_ACT * ATR/price
+TRAIL_DIST      = 0.0087  # Trail distance = TRAIL_DIST * ATR_current
+ATR_SL_MULT     = 1.93    # Hard SL = entry +/- ATR_SL_MULT * ATR_entry
+MIN_HOLD_HOURS  = 4       # Minimum hold before trail activates
 
 # ── Risk management ───────────────────────────────────
-LEVERAGE        = int(os.getenv('LEVERAGE', 8))       # 4x (demande user)
+LEVERAGE        = int(os.getenv('LEVERAGE', 7))        # 7x (C139: 7.14x -> 7)
 CAPITAL_PCT     = float(os.getenv('CAPITAL_PCT', 0.95))
-SL_PCT          = float(os.getenv('SL_PCT', 0.10))    # Stop-loss -10% brut
-TP_PCT          = float(os.getenv('TP_PCT', 0.72))    # Take-profit sécurité +72% brut
-MAX_POSITIONS   = 15      # multi-coin live
+SL_PCT          = float(os.getenv('SL_PCT', 0.10))     # Fallback SL pct (ATR-based preferred)
+TP_PCT          = float(os.getenv('TP_PCT', 0.72))     # Take-profit securite +72% brut
+MAX_POSITIONS   = 6       # 1 par coin (6 coins)
 
-# ── Stratégie avancée ─────────────────────────────────
-MHH        = int(os.getenv('MHH', 96))              # Max hold hours
-MARGIN_PCT = float(os.getenv('MARGIN_PCT', 0.10))   # 10% capital/trade × 3x = 30% notional
-VP_PCT     = int(os.getenv('VP_PCT', 95))            # ATR percentile filter
-VP_WIN     = int(os.getenv('VP_WIN', 500))           # Fenêtre ATR (barres 1h)
+# ── Strategie avancee ─────────────────────────────────
+MHH        = int(os.getenv('MHH', 96))              # Max hold hours (backtest MAX_HOLD=96)
+MARGIN_PCT = float(os.getenv('MARGIN_PCT', 0.08))   # 8% capital/trade
+VP_PCT     = int(os.getenv('VP_PCT', 80))            # ATR percentile filter (C139: vol_pct=80)
+VP_WIN     = int(os.getenv('VP_WIN', 500))           # Fenetre ATR (barres 1h)
 
-# ── CYCLE 6 TOGGLES (deploy 17/05/2026) ──────────────
+# ── CYCLE 6 TOGGLES (desactives pour Backtest v6 Optimal) ─
 USE_PARTIAL_EXIT       = os.getenv('USE_PARTIAL_EXIT', '0') == '1'
 PARTIAL_TP_PCT         = float(os.getenv('PARTIAL_TP_PCT', 0.0122))
 PARTIAL_EXIT_RATIO     = float(os.getenv('PARTIAL_EXIT_RATIO', 0.05))
@@ -106,16 +115,16 @@ def to_mexc_symbol(coin: str) -> str:
 def to_mexc_interval(tf: str) -> str:
     return TIMEFRAME_MAP[tf]
 
-# Runtime dict — initialisé au démarrage par init_contract_sizes()
+# Runtime dict — initialise au demarrage par init_contract_sizes()
 _CS_RUNTIME: dict = {}
 _PS_RUNTIME: dict = {}
 _cs_log = logging.getLogger('mexc')
 
 def init_contract_sizes(coins: list) -> None:
     """
-    Initialise les contract sizes au démarrage :
+    Initialise les contract sizes au demarrage :
     1. Charge le dict hardcoded CONTRACT_SIZES
-    2. Bulk-fetch depuis MEXC API (1 seul appel) pour valider + compléter
+    2. Bulk-fetch depuis MEXC API (1 seul appel) pour valider + completer
     3. Detecte les mismatch hardcoded vs API (bug prevention)
     4. Pour les coins manquants du hardcoded : auto-fetch + WARNING
     """
@@ -145,38 +154,37 @@ def init_contract_sizes(coins: list) -> None:
             else:
                 _cs_log.info(f'CONTRACT_SIZES: {len(api_sizes)} coins fetched depuis API MEXC')
         else:
-            raise ValueError(f'API error: {data.get('code')}')
+            raise ValueError(f'API error: {data.get("code")}')
     except Exception as e:
-        _cs_log.error(f'CONTRACT_SIZES bulk fetch FAILED: {e} — hardcoded dict seul utilisé')
+        _cs_log.error(f'CONTRACT_SIZES bulk fetch FAILED: {e} — hardcoded dict seul utilise')
 
-    # Valide hardcoded vs API — détecte les bugs comme XRP 10→1
+    # Valide hardcoded vs API
     for coin in coins:
         api_cs = api_sizes.get(coin)
         hard_cs = CONTRACT_SIZES.get(coin)
         if api_cs is not None and hard_cs is not None:
-            if abs(hard_cs - api_cs) / api_cs > 0.01:  # >1% écart = bug
+            if abs(hard_cs - api_cs) / api_cs > 0.01:
                 _cs_log.error(
-                    f'[{coin}] CS MISMATCH: config.py={hard_cs} vs API={api_cs} → '
-                    f'CORRECTION AUTO (API = source de vérité). Mettez à jour config.py!')
-                _CS_RUNTIME[coin] = api_cs  # API prime sur hardcoded incorrect
+                    f'[{coin}] CS MISMATCH: config.py={hard_cs} vs API={api_cs} -> '
+                    f'CORRECTION AUTO (API = source de verite). Mettez a jour config.py!')
+                _CS_RUNTIME[coin] = api_cs
 
-    # Auto-complète les coins absents du hardcoded
+    # Auto-complete les coins absents du hardcoded
     missing = [c for c in coins if c not in CONTRACT_SIZES]
     for coin in missing:
         if coin in api_sizes:
             _CS_RUNTIME[coin] = api_sizes[coin]
             _cs_log.warning(
-                f'[{coin}] cs={api_sizes[coin]} AUTO-FETCHED API → '
-                f'AJOUTER à config.py CONTRACT_SIZES pour pérenniser!')
+                f'[{coin}] cs={api_sizes[coin]} AUTO-FETCHED API -> '
+                f'AJOUTER a config.py CONTRACT_SIZES pour perenniser!')
         else:
             _CS_RUNTIME[coin] = 1.0
             _cs_log.error(
-                f'[{coin}] INTROUVABLE sur MEXC Futures! Fallback cs=1.0 → '
-                f'qty probablement INCORRECT. Vérifiez le symbole.')
+                f'[{coin}] INTROUVABLE sur MEXC Futures! Fallback cs=1.0 -> '
+                f'qty probablement INCORRECT. Verifiez le symbole.')
 
-    # Log récap
     for coin in coins:
-        _cs_log.info(f'  {coin}: cs={_CS_RUNTIME.get(coin, '?')}')
+        _cs_log.info(f'  {coin}: cs={_CS_RUNTIME.get(coin, "?")}')
 
 
 def get_contract_size(coin: str) -> float:
