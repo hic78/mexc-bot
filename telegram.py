@@ -9,7 +9,7 @@ from pathlib import Path
 
 import aiohttp
 
-from config import TG_TOKEN, TG_CHAT, COINS, LEVERAGE, DONCHIAN_PERIOD, ADX_PERIOD, ADX_MIN, TRAIL_ACT, TRAIL_DIST, ATR_SL_MULT, MIN_HOLD_HOURS
+from config import TG_TOKEN, TG_CHAT, COINS, CONTRACT_SIZES, LEVERAGE, DONCHIAN_PERIOD, ADX_PERIOD, ADX_MIN, TRAIL_ACT, TRAIL_DIST, ATR_SL_MULT, MIN_HOLD_HOURS
 from config import EMA_1H_PERIOD, EMA_4H_PERIOD, SL_PCT, TP_PCT, MARGIN_PCT, CAPITAL_PCT, MAX_POSITIONS, DRY_RUN, MHH, VP_PCT, VP_WIN
 
 BOT_DIR  = Path('/root/mexc-bot')
@@ -368,9 +368,12 @@ class TelegramCommands:
             coin = parts[1].upper()
             await self._reply(f'⚠️ Fermer {coin}? Confirme avec:\n/close {coin} confirm')
         else:
-            coins_str = ' | '.join(self.bot.runtime_coins)
+            example = self.bot.runtime_coins[0] if self.bot.runtime_coins else 'COIN'
+            coins_str = ' | '.join(
+                c + (' 📍' if c in self.bot.positions else '') for c in self.bot.runtime_coins
+            )
             await self._reply(
-                f'Usage: /close COIN confirm\nCoins actifs: {coins_str}\n\n'
+                f'Usage: /close {example} confirm\nCoins: {coins_str}\n\n'
                 '⚠️ FERME LA POSITION AU MARCHÉ'
             )
 
@@ -420,7 +423,12 @@ class TelegramCommands:
     async def _addcoin(self, full_text: str):
         parts = full_text.split()
         if len(parts) < 2:
-            await self._reply('Usage: /addcoin SOL\nCoins disponibles: SOL HYPE ZEC JUP BLUR FET DOGE')
+            available = sorted(set(CONTRACT_SIZES.keys()) - set(self.bot.runtime_coins))
+            await self._reply(
+                f'Usage: /addcoin SYMBOL\n'
+                f'Dispo ({len(available)}): {" ".join(available)}\n'
+                f'Actifs ({len(self.bot.runtime_coins)}): {" + ".join(self.bot.runtime_coins)}'
+            )
             return
         coin = parts[1].upper()
         await self._reply(f'⏳ Ajout {coin} en cours...')
@@ -441,8 +449,11 @@ class TelegramCommands:
         await self._reply(result)
 
     async def _help(self, _):
+        n = len(self.bot.runtime_coins)
+        coins_str = ' + '.join(self.bot.runtime_coins) if self.bot.runtime_coins else 'aucun'
         await self._reply(
-            '<b>MEXC Bot Commands</b>\n\n'
+            f'<b>MEXC Bot Commands</b>\n'
+            f'Coins actifs ({n}): {coins_str}\n\n'
             '/status  — Positions, PnL en cours\n'
             '/balance — Balance USDT disponible\n'
             '/pnl     — PnL détaillé par position\n'
