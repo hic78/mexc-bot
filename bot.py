@@ -43,7 +43,7 @@ LOG_FILE    = BOT_DIR / 'bot.log'
 TRADES_FILE = BOT_DIR / 'trades.json'
 
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO,
     format='%(asctime)s %(levelname)-8s [%(name)s] %(message)s',
     handlers=[
         logging.FileHandler(LOG_FILE),
@@ -305,10 +305,9 @@ class MEXCBot:
     def __init__(self):
         self.rest            = MEXCRestClient()
         self._state          = load_state()
-        # Sync runtime_coins: conserve coins encore dans config, purge ceux retirés, ajoute les nouveaux
+        # Sync runtime_coins: conserve TOUS les coins sauvegardés (incl. /addcoin dynamiques) + ajoute nouveaux config
         _saved = self._state.get('__coins__', COINS)
-        _cfg   = set(COINS)
-        self.runtime_coins = [c for c in _saved if c in _cfg] + [c for c in COINS if c not in set(_saved)]
+        self.runtime_coins = list(_saved) + [c for c in COINS if c not in set(_saved)]
         self.positions       = self._load_positions_from_state()
         self._opening_coins = set()  # lock anti-double-open
         self.candles    = {
