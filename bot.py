@@ -558,6 +558,7 @@ class MEXCBot:
             pnl_pct_price = (cp - entry_price) / entry_price * mult_dir  # mouvement prix brut (sans LEV)
 
         # 1. Time exit (MHH) — toujours
+        hours_held = 0.0  # default si parsing entry_time echoue
         try:
             entry_dt   = datetime.fromisoformat(entry_time)
             if entry_dt.tzinfo is None:
@@ -639,17 +640,17 @@ class MEXCBot:
                 await self.close_position(coin, direction, reason='SL_SOFT')
                 return
 
-        # 3. TP sécurité +72% brut — toujours
-        if entry_price:
+        # 3. TP sécurité — après MIN_HOLD_HOURS (parity C139: TP_ACC=0.75/lev=7 = 10.714% brut = +75% lev)
+        if entry_price and hours_held >= MIN_HOLD_HOURS:
             tp_price_long  = entry_price * (1 + TP_PCT)
             tp_price_short = entry_price * (1 - TP_PCT)
             if direction == 'LONG' and current_price >= tp_price_long:
-                log.info(f'[{coin}] TP_72 LONG @ {current_price:.6f} >= {tp_price_long:.6f} (+{TP_PCT*100:.0f}% brut)')
-                await self.close_position(coin, direction, reason='TP_72')
+                log.info(f'[{coin}] TP_SAFETY LONG @ {current_price:.6f} >= {tp_price_long:.6f} (+{TP_PCT*100:.1f}% brut = +{TP_PCT*LEVERAGE*100:.0f}% lev)')
+                await self.close_position(coin, direction, reason='TP_SAFETY')
                 return
             if direction == 'SHORT' and current_price <= tp_price_short:
-                log.info(f'[{coin}] TP_72 SHORT @ {current_price:.6f} <= {tp_price_short:.6f} (-{TP_PCT*100:.0f}% brut)')
-                await self.close_position(coin, direction, reason='TP_72')
+                log.info(f'[{coin}] TP_SAFETY SHORT @ {current_price:.6f} <= {tp_price_short:.6f} (-{TP_PCT*100:.1f}% brut = -{TP_PCT*LEVERAGE*100:.0f}% lev)')
+                await self.close_position(coin, direction, reason='TP_SAFETY')
                 return
 
         # 4. ATR Trail exit — actif apres MIN_HOLD_HOURS depuis entree (Backtest v6 Optimal)

@@ -77,7 +77,7 @@ MIN_HOLD_HOURS  = 4       # Minimum hold before trail activates
 LEVERAGE        = int(os.getenv('LEVERAGE', 7))        # 7x (C139: 7.14x -> 7)
 CAPITAL_PCT     = float(os.getenv('CAPITAL_PCT', 0.95))
 SL_PCT          = float(os.getenv('SL_PCT', 0.10))     # Fallback SL pct (ATR-based preferred)
-TP_PCT          = float(os.getenv('TP_PCT', 0.72))     # Take-profit securite +72% brut
+TP_PCT          = float(os.getenv('TP_PCT', 0.10714))  # TP parity C139: TP_ACC=0.75/lev=7 → 10.714% brut = +75% leveraged
 MAX_POSITIONS   = 6       # 1 par coin (6 coins)
 
 # ── Strategie avancee ─────────────────────────────────
