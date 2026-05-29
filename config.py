@@ -60,7 +60,7 @@ TIMEFRAME_MAP = {
 # ATR_SL=1.93x  ADX(19) min=7.7  VOL_PCT=80  LEV=7x
 DONCHIAN_PERIOD = 3       # D3 (was D5)
 EMA_1H_PERIOD   = 239     # EMA 1h filtre (was 100)
-EMA_4H_PERIOD   = 281     # EMA 4h filtre (was 38)
+EMA_4H_PERIOD   = 265     # C150: was 281
 ATR_PERIOD      = 14      # Periode ATR
 
 # ADX trend filter (entry only)
@@ -68,9 +68,9 @@ ADX_PERIOD      = 19      # Wilder ADX period
 ADX_MIN         = 7.7     # Minimum ADX to enter (ranging = skip)
 
 # ATR trailing stop (replaces Chandelier period-based)
-TRAIL_ACT       = 0.2437  # Activate trail when gain >= TRAIL_ACT * ATR/price
-TRAIL_DIST      = 0.0087  # Trail distance = TRAIL_DIST * ATR_current
-ATR_SL_MULT     = 1.93    # Hard SL = entry +/- ATR_SL_MULT * ATR_entry
+TRAIL_ACT       = 0.22    # C150: was 0.2437
+TRAIL_DIST      = 0.005   # C150: was 0.0087
+ATR_SL_MULT     = 1.70    # C150: was 1.93
 MIN_HOLD_HOURS  = 4       # Minimum hold before trail activates
 
 # ── Risk management ───────────────────────────────────
