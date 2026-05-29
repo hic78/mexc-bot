@@ -406,7 +406,7 @@ class MEXCBot:
             sym = to_mexc_symbol(coin)
             for tf in ['1h', '1m', '4h']:
                 try:
-                    candles = self.rest.get_klines_full(sym, to_mexc_interval(tf), limit=VP_WIN + 50)
+                    candles = self.rest.get_klines_full(sym, to_mexc_interval(tf), limit=1400)
                     self.candles[coin][tf].extend(candles)
                     log.info(f'  {coin} {tf}: {len(candles)} candles chargées')
                 except Exception as e:
@@ -511,7 +511,7 @@ class MEXCBot:
         for tf in ['1h', '1m', '4h']:
             try:
                 bars = await asyncio.to_thread(
-                    self.rest.get_klines_full, sym, to_mexc_interval(tf), VP_WIN + 50
+                    self.rest.get_klines_full, sym, to_mexc_interval(tf), 1400
                 )
                 self.candles[coin][tf].extend(bars)
                 loaded[tf] = len(bars)
@@ -747,7 +747,7 @@ class MEXCBot:
             sym = to_mexc_symbol(coin)
             for tf in ['1h', '4h', '1m']:
                 try:
-                    candles = self.rest.get_klines_full(sym, to_mexc_interval(tf), limit=VP_WIN + 50)
+                    candles = self.rest.get_klines_full(sym, to_mexc_interval(tf), limit=1400)
                     self.candles[coin][tf].clear()
                     self.candles[coin][tf].extend(candles)
                 except Exception as e:
