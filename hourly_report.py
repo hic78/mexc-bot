@@ -19,6 +19,22 @@ CONTRACT_SIZES = {
 }
 LEVERAGE = 8
 
+# Fix 2026-05-29: LINK/FET/TRX absents du dict -> cs=1.0 erronee (LINK x10). + fetch API.
+CONTRACT_SIZES.update({"LINK": 0.1, "FET": 10.0, "TRX": 10.0})
+
+def fetch_contract_sizes():
+    try:
+        req = urllib.request.urlopen("https://contract.mexc.com/api/v1/contract/detail", timeout=10)
+        data = json.loads(req.read())
+        out = {}
+        for c in data.get("data", []):
+            sym = c.get("symbol", "")
+            if sym.endswith("_USDT") and c.get("contractSize") is not None:
+                out[sym.replace("_USDT", "")] = float(c["contractSize"])
+        return out
+    except Exception:
+        return {}
+
 def load_env():
     env = {}
     try:
@@ -109,6 +125,7 @@ def main():
         tg_send(token, chat_id, f'<b>MONITOR</b> {now_str}\nstate.json illisible!')
         sys.exit(1)
 
+    cs_live = fetch_contract_sizes()
     positions = []
     for coin, data in state.items():
         if coin.startswith('__') or not isinstance(data, dict):
@@ -117,7 +134,7 @@ def main():
         if not pos:
             continue
         price = get_price(coin)
-        cs    = CONTRACT_SIZES.get(coin, 1.0)
+        cs    = cs_live.get(coin) or CONTRACT_SIZES.get(coin, 1.0)
         entry = pos.get('entry_price', 0)
         qty   = pos.get('qty', 0)
         direction = pos.get('direction', '?')
@@ -125,7 +142,7 @@ def main():
 
         if price and entry:
             pnl_pct  = (price - entry) / entry if direction == 'LONG' else (entry - price) / entry
-            pnl_usdt = pnl_pct * entry * qty * cs * LEVERAGE
+            pnl_usdt = pnl_pct * entry * qty * cs
         else:
             pnl_pct = pnl_usdt = 0
             price = 0
