@@ -200,7 +200,7 @@ def compute_signal(candles_1h: list, candles_4h: list, coin: str = '',
     # EMA filters
     closes_1h = [c['c'] for c in candles_1h]
     closes_4h = [c['c'] for c in candles_4h]
-    ema_1h    = calc_ema(closes_1h[:-1], EMA_1H_PERIOD)  # shift(1): barre précédente, identique Champion v4
+    ema_1h    = calc_ema(closes_1h, EMA_1H_PERIOD)  # C150 parity: PAS de shift (backtest inclut barre fermée du signal)
     ema_4h    = calc_ema(closes_4h, EMA_4H_PERIOD)
 
     log.debug(f'{tag} Donchian D{DONCHIAN_PERIOD}: close={close:.6f} dc_high={dc_high:.6f} dc_low={dc_low:.6f}')
