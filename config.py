@@ -83,6 +83,7 @@ MAX_POSITIONS   = 6       # 1 par coin (6 coins)
 # ── Strategie avancee ─────────────────────────────────
 MHH        = int(os.getenv('MHH', 96))              # Max hold hours (backtest MAX_HOLD=96)
 MARGIN_PCT = float(os.getenv('MARGIN_PCT', 0.08))   # 8% capital/trade
+TAKER_FEE  = float(os.getenv('TAKER_FEE',  0.0006))  # 0.06% taker MEXC futures (par cote)
 VP_PCT     = int(os.getenv('VP_PCT', 80))            # ATR percentile filter (C139: vol_pct=80)
 VP_WIN     = int(os.getenv('VP_WIN', 500))           # Fenetre ATR (barres 1h)
 

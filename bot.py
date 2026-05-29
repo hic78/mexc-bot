@@ -279,13 +279,18 @@ def append_trade(coin: str, direction: str, entry_price: float,
             trades = json.loads(TRADES_FILE.read_text())
         except Exception:
             pass
-    pnl_pct  = 0.0
-    pnl_usdt = 0.0
+    pnl_pct   = 0.0
+    pnl_usdt  = 0.0
+    pnl_gross = 0.0
+    fees_usdt = 0.0
     if entry_price and exit_price:
-        mult     = 1 if direction == 'LONG' else -1
-        pnl_pct  = (exit_price - entry_price) / entry_price * mult * LEVERAGE * 100
-        cs       = get_contract_size(coin)
-        pnl_usdt = (exit_price - entry_price) * qty * cs * mult
+        mult      = 1 if direction == 'LONG' else -1
+        cs        = get_contract_size(coin)
+        pnl_gross = (exit_price - entry_price) * qty * cs * mult
+        fees_usdt = (entry_price + exit_price) * qty * cs * TAKER_FEE
+        pnl_usdt  = pnl_gross - fees_usdt
+        margin    = entry_price * qty * cs / LEVERAGE
+        pnl_pct   = pnl_usdt / margin * 100 if margin > 0 else 0.0
     trades.append({
         'coin':        coin,
         'direction':   direction,
@@ -293,6 +298,8 @@ def append_trade(coin: str, direction: str, entry_price: float,
         'exit_price':  exit_price,
         'qty':         qty,
         'pnl':         round(pnl_usdt, 4),
+        'pnl_gross':   round(pnl_gross, 4),
+        'fees_usdt':   round(fees_usdt, 4),
         'pnl_pct':     round(pnl_pct, 2),
         'reason':      reason,
         'date':        datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M'),
@@ -1007,13 +1014,17 @@ class MEXCBot:
         pnl_str = ''
         if entry_price and exit_price:
             mult        = 1 if direction == 'LONG' else -1
-            pnl_pct     = (exit_price - entry_price) / entry_price * mult * LEVERAGE * 100
             cs          = get_contract_size(coin)
-            pnl_usdt    = (exit_price - entry_price) * qty * cs * mult
+            pnl_gross   = (exit_price - entry_price) * qty * cs * mult
+            fees_usdt   = (entry_price + exit_price) * qty * cs * TAKER_FEE
+            pnl_usdt    = pnl_gross - fees_usdt
+            margin      = entry_price * qty * cs / LEVERAGE
+            pnl_pct     = pnl_usdt / margin * 100 if margin > 0 else 0.0
             capital_pct = pnl_pct * MARGIN_PCT
-            emoji       = '✅' if pnl_pct > 0 else '❌'
+            emoji       = '✅' if pnl_usdt > 0 else '❌'
             pnl_str = (
-                f'\nPnL: {pnl_usdt:+.2f} USDT {emoji}'
+                f'\nPnL: {pnl_usdt:+.2f} USDT (net) {emoji}'
+                f'\nBrut: {pnl_gross:+.2f} | Frais: -{fees_usdt:.3f}'
                 f'\nPnL marge:  {pnl_pct:+.1f}%'
                 f'\nPnL capital:{capital_pct:+.2f}% du capital total'
             )
