@@ -78,7 +78,7 @@ LEVERAGE        = int(os.getenv('LEVERAGE', 7))        # 7x (C139: 7.14x -> 7)
 CAPITAL_PCT     = float(os.getenv('CAPITAL_PCT', 0.95))
 SL_PCT          = float(os.getenv('SL_PCT', 0.10))     # Fallback SL pct (ATR-based preferred)
 TP_PCT          = float(os.getenv('TP_PCT', 0.10714))  # TP parity C139: TP_ACC=0.75/lev=7 → 10.714% brut = +75% leveraged
-MAX_POSITIONS   = 6       # 1 par coin (6 coins)
+MAX_POSITIONS   = 10      # Option B (2026-05-29): 10 sur 14 coins, 80% marge max @ MARGIN_PCT 8% (was 6)
 
 # ── Strategie avancee ─────────────────────────────────
 MHH        = int(os.getenv('MHH', 96))              # Max hold hours (backtest MAX_HOLD=96)
