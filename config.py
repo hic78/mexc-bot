@@ -41,7 +41,12 @@ CONTRACT_SIZES = {
     'TAO':  0.01,   # 1 contrat = 0.01 TAO (verifie API MEXC: contractSize=0.01)
     'CHZ':  1.0,    # 1 contrat = 1 CHZ (verifie API MEXC: contractSize=1)
     'H':    1.0,    # 1 contrat = 1 H (verifie API MEXC: contractSize=1)
-    'RUNE': 1.0,    # 1 contrat = 1 RUNE (verifie API MEXC: contractSize=1)
+    RUNE: 1.0,    # 1 contrat = 1 RUNE (verifie API MEXC: contractSize=1)
+    # ajouts 2026-06-04 (auto-fetched -> hardcodes)
+    SEI:  10.0,   WIF:  10.0,   BNB:  0.01,
+    UNI:  0.1,    INJ:  1.0,    SUI:  1.0,
+    ARB:  1.0,    OP:   1.0,    NEAR: 1.0,
+    TIA:  1.0,    JUP:  10.0,   BLUR: 10.0,
 }
 
 # ── Timeframes ────────────────────────────────────────
@@ -77,13 +82,13 @@ MIN_HOLD_HOURS  = 4       # Minimum hold before trail activates
 LEVERAGE        = int(os.getenv('LEVERAGE', 7))        # 7x (C139: 7.14x -> 7)
 CAPITAL_PCT     = float(os.getenv('CAPITAL_PCT', 0.95))
 SL_PCT          = float(os.getenv('SL_PCT', 0.10))     # Fallback SL pct (ATR-based preferred)
-TP_PCT          = float(os.getenv('TP_PCT', 0.10714))  # TP parity C139: TP_ACC=0.75/lev=7 → 10.714% brut = +75% leveraged
+TP_PCT          = float(os.getenv('TP_PCT', 0.75/LEVERAGE))  # C150-OPTIMUS: tp=entry*(1+-TP_ACC/LEV), TP_ACC=0.75 -> lev5=15%% brut=+75%% lev
 MAX_POSITIONS   = 6      # Option B (2026-05-29): 10 sur 14 coins, 80% marge max @ MARGIN_PCT 8% (was 6)
 
 # ── Strategie avancee ─────────────────────────────────
 MHH        = int(os.getenv('MHH', 96))              # Max hold hours (backtest MAX_HOLD=96)
 MARGIN_PCT = float(os.getenv('MARGIN_PCT', 0.08))   # 8% capital/trade
-TAKER_FEE  = float(os.getenv('TAKER_FEE',  0.0006))  # 0.06% taker MEXC futures (par cote)
+TAKER_FEE  = float(os.getenv("TAKER_FEE",  0.0002))  # 0.06% taker MEXC futures (par cote)
 VP_PCT     = int(os.getenv('VP_PCT', 80))            # ATR percentile filter (C139: vol_pct=80)
 VP_WIN     = int(os.getenv('VP_WIN', 500))           # Fenetre ATR (barres 1h)
 
