@@ -36,6 +36,8 @@ from config import (
 )
 from mexc_client import MEXCRestClient, MEXCWebSocket
 from telegram import tg_send, TelegramCommands
+import optimus
+OPTIMUS_ACTIVE = os.getenv('OPTIMUS_ACTIVE', '0') == '1'
 
 BOT_DIR     = Path('/root/mexc-bot')
 STATE_FILE  = BOT_DIR / 'state.json'
@@ -753,6 +755,13 @@ class MEXCBot:
                 except Exception as e:
                     log.warning(f'fetch {tf} {coin}: {e}')
 
+        # C150-OPTIMUS: classement cross-sectional (momentum relatif tous coins)
+        _cs_rets = {}
+        for _c in self.runtime_coins:
+            _bb = list(self.candles[_c]['1h'])
+            _cs_rets[_c] = optimus.cs_return([x['c'] for x in _bb]) if len(_bb) > optimus.CS_N else None
+        _cs_signed = optimus.cross_sectional_signed(_cs_rets)
+
         for coin in self.runtime_coins:
             bars_1h = list(self.candles[coin]['1h'])
             bars_4h = list(self.candles[coin]['4h'])
@@ -774,6 +783,13 @@ class MEXCBot:
             if signal == 'NONE':
                 continue
 
+            # C150-OPTIMUS gate: Markov regime + CS-veto + conviction
+            _keep, _convm, _reason = optimus.optimus_gate(signal, coin, [x['c'] for x in bars_1h], _cs_signed)
+            log.info(f'[{coin}] OPTIMUS {"ACTIF" if OPTIMUS_ACTIVE else "SHADOW"}: signal={signal} keep={_keep} {_reason}')
+            if OPTIMUS_ACTIVE and not _keep:
+                continue
+            _conv_mult = _convm if OPTIMUS_ACTIVE else 1.0
+
             log.info(f'[{coin}] SIGNAL {signal} détecté! ATR={atr_val:.6f}')
             await tg_send(
                 f'📡 <b>Signal {signal} — {coin}</b>\n'
@@ -782,12 +798,12 @@ class MEXCBot:
             )
             self._entered_in_bar[coin] = current_1h_ts
             try:
-                await self.open_position(coin, signal, atr_val)
+                await self.open_position(coin, signal, atr_val, _conv_mult)
             except Exception:
                 self._entered_in_bar[coin] = None
 
     # ── Open position ─────────────────────────────────────────────────────────
-    async def open_position(self, coin: str, direction: str, atr_val: float = 0.0):
+    async def open_position(self, coin: str, direction: str, atr_val: float = 0.0, conv_mult: float = 1.0):
         if coin in self.positions or coin in self._opening_coins:
             log.warning(f"[{coin}] open_position: position deja ouverte — double-open ignore")
             return
@@ -812,7 +828,7 @@ class MEXCBot:
                 await tg_send(f'⚠️ {coin}: prix=0 (API glitch) → ouverture annulée')
                 return
             balance     = self.rest.get_balance()
-            qty         = calc_qty(balance, price, coin)
+            qty         = max(1, round(calc_qty(balance, price, coin) * conv_mult))
             mult        = 1 if direction == 'LONG' else -1
             sl_price    = (price - mult * ATR_SL_MULT * atr_val
                           if atr_val > 0 else price * (1 - mult * SL_PCT))

@@ -60,7 +60,7 @@ TIMEFRAME_MAP = {
 # ATR_SL=1.93x  ADX(19) min=7.7  VOL_PCT=80  LEV=7x
 DONCHIAN_PERIOD = 3       # D3 (was D5)
 EMA_1H_PERIOD   = 239     # EMA 1h filtre (was 100)
-EMA_4H_PERIOD   = 265     # C150: was 281
+EMA_4H_PERIOD   = 281     # C150: was 281
 ATR_PERIOD      = 14      # Periode ATR
 
 # ADX trend filter (entry only)
@@ -69,8 +69,8 @@ ADX_MIN         = 7.7     # Minimum ADX to enter (ranging = skip)
 
 # ATR trailing stop (replaces Chandelier period-based)
 TRAIL_ACT       = 0.22    # C150: was 0.2437
-TRAIL_DIST      = 0.005   # C150: was 0.0087
-ATR_SL_MULT     = 1.70    # C150: was 1.93
+TRAIL_DIST      = 0.0087   # C150: was 0.0087
+ATR_SL_MULT     = 3.0    # C150: was 1.93
 MIN_HOLD_HOURS  = 4       # Minimum hold before trail activates
 
 # ── Risk management ───────────────────────────────────
@@ -78,7 +78,7 @@ LEVERAGE        = int(os.getenv('LEVERAGE', 7))        # 7x (C139: 7.14x -> 7)
 CAPITAL_PCT     = float(os.getenv('CAPITAL_PCT', 0.95))
 SL_PCT          = float(os.getenv('SL_PCT', 0.10))     # Fallback SL pct (ATR-based preferred)
 TP_PCT          = float(os.getenv('TP_PCT', 0.10714))  # TP parity C139: TP_ACC=0.75/lev=7 → 10.714% brut = +75% leveraged
-MAX_POSITIONS   = 10      # Option B (2026-05-29): 10 sur 14 coins, 80% marge max @ MARGIN_PCT 8% (was 6)
+MAX_POSITIONS   = 6      # Option B (2026-05-29): 10 sur 14 coins, 80% marge max @ MARGIN_PCT 8% (was 6)
 
 # ── Strategie avancee ─────────────────────────────────
 MHH        = int(os.getenv('MHH', 96))              # Max hold hours (backtest MAX_HOLD=96)
