@@ -823,6 +823,18 @@ class MEXCBot:
             return
         self._opening_coins.add(coin)
         await asyncio.sleep(optimus.MICRO_DELAY_SEC)  # C150-OPTIMUS: anti selection-adverse HFT
+        # C150-OPTIMUS gate (point de passage commun: couvre scan ET intrabar)
+        if OPTIMUS_ACTIVE:
+            try:
+                _csr = {c: optimus.cs_return([x['c'] for x in list(self.candles[c]['1h'])]) for c in self.runtime_coins}
+                _css = optimus.cross_sectional_signed(_csr)
+                _keep, conv_mult, _rsn = optimus.optimus_gate(direction, coin, [x['c'] for x in list(self.candles[coin]['1h'])], _css)
+                log.info(f'[{coin}] OPTIMUS ACTIF: {direction} keep={_keep} conv_mult={conv_mult:.2f} {_rsn}')
+                if not _keep:
+                    self._opening_coins.discard(coin)
+                    return
+            except Exception as _ge:
+                log.warning(f'[{coin}] OPTIMUS gate erreur (ouvre sans gate): {_ge}')
         sym  = to_mexc_symbol(coin)
         side = 1 if direction == 'LONG' else 3  # 1=Open Long, 3=Open Short
 
