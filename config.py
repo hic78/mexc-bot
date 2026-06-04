@@ -24,8 +24,8 @@ CONTRACT_SIZES = {
     'DOGE': 100.0,  # 1 contrat = 100 DOGE
     'HYPE': 0.1,    # 1 contrat = 0.1 HYPE
     'ZEC':  0.01,   # 1 contrat = 0.01 ZEC
-    'JUP':  1.0,
-    'BLUR': 1.0,
+    'JUP':  10.0,  # verifie API MEXC: contractSize=10
+    'BLUR': 10.0,  # verifie API MEXC: contractSize=10
     'FET':  10.0,   # contractSize=10 (verifie API MEXC 2026-05-24)
     'US':   10.0,   # 1 contrat = 10 US (verifie API MEXC: contractSize=10)
     'LAB':  10.0,   # 1 contrat = 10 LAB (verifie API MEXC: contractSize=10)
@@ -41,12 +41,17 @@ CONTRACT_SIZES = {
     'TAO':  0.01,   # 1 contrat = 0.01 TAO (verifie API MEXC: contractSize=0.01)
     'CHZ':  1.0,    # 1 contrat = 1 CHZ (verifie API MEXC: contractSize=1)
     'H':    1.0,    # 1 contrat = 1 H (verifie API MEXC: contractSize=1)
-    RUNE: 1.0,    # 1 contrat = 1 RUNE (verifie API MEXC: contractSize=1)
-    # ajouts 2026-06-04 (auto-fetched -> hardcodes)
-    SEI:  10.0,   WIF:  10.0,   BNB:  0.01,
-    UNI:  0.1,    INJ:  1.0,    SUI:  1.0,
-    ARB:  1.0,    OP:   1.0,    NEAR: 1.0,
-    TIA:  1.0,    JUP:  10.0,   BLUR: 10.0,
+    'RUNE': 1.0,
+    'SEI':  10.0,
+    'WIF':  10.0,
+    'BNB':  0.01,
+    'UNI':  0.1,
+    'INJ':  1.0,
+    'SUI':  1.0,
+    'ARB':  1.0,
+    'OP':   1.0,
+    'NEAR': 1.0,
+    'TIA':  1.0,
 }
 
 # ── Timeframes ────────────────────────────────────────
@@ -88,7 +93,7 @@ MAX_POSITIONS   = 6      # Option B (2026-05-29): 10 sur 14 coins, 80% marge max
 # ── Strategie avancee ─────────────────────────────────
 MHH        = int(os.getenv('MHH', 96))              # Max hold hours (backtest MAX_HOLD=96)
 MARGIN_PCT = float(os.getenv('MARGIN_PCT', 0.08))   # 8% capital/trade
-TAKER_FEE  = float(os.getenv("TAKER_FEE",  0.0002))  # 0.06% taker MEXC futures (par cote)
+TAKER_FEE  = float(os.getenv('TAKER_FEE',  0.0002))  # 0.02% taker MEXC futures (taux reel — 0 frais maker)
 VP_PCT     = int(os.getenv('VP_PCT', 80))            # ATR percentile filter (C139: vol_pct=80)
 VP_WIN     = int(os.getenv('VP_WIN', 500))           # Fenetre ATR (barres 1h)
 
