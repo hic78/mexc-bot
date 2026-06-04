@@ -96,3 +96,22 @@ def optimus_gate(signal, coin, closes_1h, cs_signed):
         if -sd < 0:               return False, 0.0, f'CS-veto: coin fort (rang {sd:+.2f})'
         return True, conviction_mult(cS), f'OK short conv={cS:.2f} mult={conviction_mult(cS):.2f}'
     return True, 1.0, 'no-signal'
+
+# ── GARDE-FOUS (backtest + NotebookLM validés) ──────────────────────────────
+import json as _json, datetime as _dt
+KILL_DD_PCT     = 0.15   # circuit-breaker : halte entrées si perte jour <= -15% (neutre backtest, tail-risk)
+MICRO_DELAY_SEC = 2      # micro-délai exécution anti sélection-adverse HFT
+
+def today_realized_pnl(trades_file='/root/mexc-bot/trades.json'):
+    """Somme du pnl USDT réalisé aujourd'hui (date locale du bot)."""
+    try:
+        t=_json.load(open(trades_file))
+    except Exception:
+        return 0.0
+    today=_dt.datetime.now().strftime('%Y-%m-%d')
+    return float(sum(x.get('pnl',0.0) for x in t if str(x.get('date','')).startswith(today)))
+
+def kill_switch_triggered(balance, trades_file='/root/mexc-bot/trades.json'):
+    """True si la perte réalisée du jour <= -KILL_DD_PCT du capital."""
+    if not balance or balance<=0: return False
+    return today_realized_pnl(trades_file) <= -KILL_DD_PCT*balance

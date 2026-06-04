@@ -762,6 +762,20 @@ class MEXCBot:
             _cs_rets[_c] = optimus.cs_return([x['c'] for x in _bb]) if len(_bb) > optimus.CS_N else None
         _cs_signed = optimus.cross_sectional_signed(_cs_rets)
 
+        # C150-OPTIMUS kill switch: circuit-breaker DD journalier (latch journee)
+        _kday = int(time.time()) // 86400
+        if getattr(self, '_killed_day', None) == _kday:
+            return
+        try:
+            _bal = self.rest.get_balance()
+            if optimus.kill_switch_triggered(_bal):
+                self._killed_day = _kday
+                log.error(f'KILL SWITCH: perte jour <= -{optimus.KILL_DD_PCT*100:.0f}% (pnl={optimus.today_realized_pnl():.2f} bal={_bal:.2f}) -> entrees STOPPEES')
+                await tg_send(f'\U0001F6D1 KILL SWITCH (DD jour <= -{optimus.KILL_DD_PCT*100:.0f}%) - nouvelles entrees stoppees aujourd hui. Sorties continuent.')
+                return
+        except Exception as _ke:
+            log.warning(f'kill switch check: {_ke}')
+
         for coin in self.runtime_coins:
             bars_1h = list(self.candles[coin]['1h'])
             bars_4h = list(self.candles[coin]['4h'])
@@ -808,6 +822,7 @@ class MEXCBot:
             log.warning(f"[{coin}] open_position: position deja ouverte — double-open ignore")
             return
         self._opening_coins.add(coin)
+        await asyncio.sleep(optimus.MICRO_DELAY_SEC)  # C150-OPTIMUS: anti selection-adverse HFT
         sym  = to_mexc_symbol(coin)
         side = 1 if direction == 'LONG' else 3  # 1=Open Long, 3=Open Short
 
