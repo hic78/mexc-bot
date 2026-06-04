@@ -93,7 +93,7 @@ MAX_POSITIONS   = 6      # Option B (2026-05-29): 10 sur 14 coins, 80% marge max
 # ── Strategie avancee ─────────────────────────────────
 MHH        = int(os.getenv('MHH', 96))              # Max hold hours (backtest MAX_HOLD=96)
 MARGIN_PCT = float(os.getenv('MARGIN_PCT', 0.08))   # 8% capital/trade
-TAKER_FEE  = float(os.getenv('TAKER_FEE',  0.0002))  # 0.02% taker MEXC futures (taux reel — 0 frais maker)
+TAKER_FEE  = float(os.getenv('TAKER_FEE',  0.0002))  # 0.08% taker reel MEXC constate (empirique: 0.1442/180.28 = 0.0800% par side)
 VP_PCT     = int(os.getenv('VP_PCT', 80))            # ATR percentile filter (C139: vol_pct=80)
 VP_WIN     = int(os.getenv('VP_WIN', 500))           # Fenetre ATR (barres 1h)
 
