@@ -760,7 +760,7 @@ class MEXCBot:
         for _c in self.runtime_coins:
             _bb = list(self.candles[_c]['1h'])
             _cs_rets[_c] = optimus.cs_return([x['c'] for x in _bb]) if len(_bb) > optimus.CS_N else None
-        _cs_signed = optimus.cross_sectional_signed(_cs_rets)
+        self._cs_signed = optimus.cross_sectional_signed(_cs_rets)  # snapshot 1x/cycle (lookup par open_position)
 
         # C150-OPTIMUS kill switch: circuit-breaker DD journalier (latch journee)
         _kday = int(time.time()) // 86400
@@ -797,13 +797,6 @@ class MEXCBot:
             if signal == 'NONE':
                 continue
 
-            # C150-OPTIMUS gate: Markov regime + CS-veto + conviction
-            _keep, _convm, _reason = optimus.optimus_gate(signal, coin, [x['c'] for x in bars_1h], _cs_signed)
-            log.info(f'[{coin}] OPTIMUS {"ACTIF" if OPTIMUS_ACTIVE else "SHADOW"}: signal={signal} keep={_keep} {_reason}')
-            if OPTIMUS_ACTIVE and not _keep:
-                continue
-            _conv_mult = _convm if OPTIMUS_ACTIVE else 1.0
-
             log.info(f'[{coin}] SIGNAL {signal} détecté! ATR={atr_val:.6f}')
             await tg_send(
                 f'📡 <b>Signal {signal} — {coin}</b>\n'
@@ -812,7 +805,7 @@ class MEXCBot:
             )
             self._entered_in_bar[coin] = current_1h_ts
             try:
-                await self.open_position(coin, signal, atr_val, _conv_mult)
+                await self.open_position(coin, signal, atr_val)
             except Exception:
                 self._entered_in_bar[coin] = None
 
@@ -826,8 +819,9 @@ class MEXCBot:
         # C150-OPTIMUS gate (point de passage commun: couvre scan ET intrabar)
         if OPTIMUS_ACTIVE:
             try:
-                _csr = {c: optimus.cs_return([x['c'] for x in list(self.candles[c]['1h'])]) for c in self.runtime_coins}
-                _css = optimus.cross_sectional_signed(_csr)
+                _css = getattr(self, '_cs_signed', None)
+                if not _css:
+                    _css = optimus.cross_sectional_signed({c: optimus.cs_return([x['c'] for x in list(self.candles[c]['1h'])]) for c in self.runtime_coins})
                 _keep, conv_mult, _rsn = optimus.optimus_gate(direction, coin, [x['c'] for x in list(self.candles[coin]['1h'])], _css)
                 log.info(f'[{coin}] OPTIMUS ACTIF: {direction} keep={_keep} conv_mult={conv_mult:.2f} {_rsn}')
                 if not _keep:
