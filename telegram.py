@@ -253,7 +253,7 @@ class TelegramCommands:
                     emoji = '✅' if pnl > 0 else '❌'
                     lines.append(
                         f"{emoji} {t.get('coin','?')} {t.get('direction','?')} "
-                        f"[{t.get('reason','?')}] {pnl:+.1f}% "
+                        f"[{t.get('reason','?')}] {pnl:+.2f} USDT ({t.get('pnl_pct', 0):+.1f}%) "
                         f"({t.get('date','?')})"
                     )
             except Exception:

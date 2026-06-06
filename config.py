@@ -1,6 +1,6 @@
 # config.py — MEXC Bot
 # NE PAS CONFONDRE AVEC /root/champion-v4-bot/
-# Strategie : Backtest v6 Optimal — C139 (D3 EMA239/281 ATR trail ADX19min7.7)
+# Strategie : C150-OPTIMUS — D3 EMA239/281 Markov+CS-veto+conviction Lev5 Marge15%
 
 import os, requests, logging
 from dotenv import load_dotenv
@@ -16,7 +16,11 @@ BASE_REST = 'https://contract.mexc.com'
 BASE_WS   = 'wss://contract.mexc.com/edge'
 
 # ── Coins (Backtest v6 Optimal — 6 actifs MEXC) ──────
-COINS = ['AVAX', 'BTC', 'ETH', 'SOL', 'LINK', 'DOGE']
+COINS = [
+    'AVAX', 'BTC', 'ETH', 'SOL', 'LINK', 'DOGE', 'TAO', 'XRP', 'ZEC',
+    'RUNE', 'CHZ', 'FET', 'HYPE', 'TIA', 'INJ', 'OP', 'SEI', 'UNI',
+    'ARB', 'SUI', 'NEAR', 'JUP', 'BLUR', 'WIF', 'BNB', 'WLD',
+]  # C150-OPTIMUS 26 coins (state.json __coins__ = référence runtime)
 
 # ── Contract sizes (1 contrat = X token) ─────────────
 CONTRACT_SIZES = {
@@ -85,7 +89,7 @@ ATR_SL_MULT     = 3.0    # C150: was 1.93
 MIN_HOLD_HOURS  = 4       # Minimum hold before trail activates
 
 # ── Risk management ───────────────────────────────────
-LEVERAGE        = int(os.getenv('LEVERAGE', 7))        # 7x (C139: 7.14x -> 7)
+LEVERAGE        = int(os.getenv('LEVERAGE', 5))        # C150-OPTIMUS: 5x
 CAPITAL_PCT     = float(os.getenv('CAPITAL_PCT', 0.95))
 SL_PCT          = float(os.getenv('SL_PCT', 0.10))     # Fallback SL pct (ATR-based preferred)
 TP_PCT          = float(os.getenv('TP_PCT', 0.75/LEVERAGE))  # C150-OPTIMUS: tp=entry*(1+-TP_ACC/LEV), TP_ACC=0.75 -> lev5=15%% brut=+75%% lev
@@ -93,9 +97,9 @@ MAX_POSITIONS   = 6      # Option B (2026-05-29): 10 sur 14 coins, 80% marge max
 
 # ── Strategie avancee ─────────────────────────────────
 MHH        = int(os.getenv('MHH', 96))              # Max hold hours (backtest MAX_HOLD=96)
-MARGIN_PCT = float(os.getenv('MARGIN_PCT', 0.08))   # 8% capital/trade
-TAKER_FEE  = float(os.getenv('TAKER_FEE',  0.0002))  # 0.08% taker reel MEXC constate (empirique: 0.1442/180.28 = 0.0800% par side)
-VP_PCT     = int(os.getenv('VP_PCT', 80))            # ATR percentile filter (C139: vol_pct=80)
+MARGIN_PCT = float(os.getenv('MARGIN_PCT', 0.15))   # C150-OPTIMUS: 15% capital/trade
+TAKER_FEE  = float(os.getenv('TAKER_FEE',  0.0008))  # 0.08%/side empirique (0.1442 USDT / 180.28 notional = 0.0800%)
+VP_PCT     = int(os.getenv('VP_PCT', 90))            # C150-OPTIMUS: vol_pct=90 (validé DSR=1.0)
 VP_WIN     = int(os.getenv('VP_WIN', 500))           # Fenetre ATR (barres 1h)
 
 # ── CYCLE 6 TOGGLES (desactives pour Backtest v6 Optimal) ─
