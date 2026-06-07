@@ -42,7 +42,8 @@ def main():
     problems = []
     infos = []
 
-    # 1. Bot online (pm2)
+    # 1. Bot online (pm2) = LE vrai indicateur de vie
+    restarts = 0
     try:
         out = subprocess.run(['pm2', 'jlist'], capture_output=True, text=True, timeout=15).stdout
         procs = json.loads(out)
@@ -52,18 +53,27 @@ def main():
         else:
             restarts = mexc.get('pm2_env', {}).get('restart_time', 0)
             uptime_ms = mexc.get('pm2_env', {}).get('pm_uptime', 0)
+            # uptime trop court = crash récent
+            up_min = (time.time()*1000 - uptime_ms) / 60000 if uptime_ms else 999
+            if up_min < 3:
+                problems.append(f'⚠️ Bot redémarré il y a {up_min:.0f} min (vérifier si crash)')
     except Exception as e:
         problems.append(f'🔴 pm2 check failed: {e}')
 
-    # 2. Heartbeat — dernière activité log < 20 min
+    # 2. Crash-loop detection — restarts qui augmentent vite (PAS le mtime de bot.log:
+    #    le bot ne logge en INFO que les signaux → silence normal en marché calme, faux positifs)
     try:
-        bl = os.path.join(BOT_DIR, 'bot.log')
-        mtime = os.path.getmtime(bl)
-        age_min = (time.time() - mtime) / 60
-        if age_min > 20:
-            problems.append(f'🔴 BOT FIGÉ: bot.log pas écrit depuis {age_min:.0f} min')
+        marker = '/tmp/health_guard_restarts'
+        prev = 0
+        if os.path.exists(marker):
+            try: prev = int(open(marker).read().strip())
+            except Exception: prev = 0
+        # +3 restarts depuis le dernier passage (1h) = crash-loop
+        if restarts - prev >= 3:
+            problems.append(f'🔴 CRASH-LOOP: {restarts - prev} restarts en 1h (total {restarts})')
+        open(marker, 'w').write(str(restarts))
     except Exception as e:
-        problems.append(f'⚠️ heartbeat check failed: {e}')
+        infos.append(f'crash-loop check skip: {e}')
 
     # 3+4. Positions: state vs exchange + time-stop check
     try:
