@@ -1119,8 +1119,9 @@ class MEXCBot:
                 await asyncio.sleep(2)
                 continue
 
-            # Vérification réelle sur exchange (2s puis check)
-            await asyncio.sleep(2)
+            # Vérification réelle sur exchange — délai 5s pour absorber la latence MEXC (1-5s, NLM)
+            # success=True sur market order = quasi-instantané; le close de 2s était trop court -> faux retry
+            await asyncio.sleep(5)
             try:
                 pos_live = self.rest.get_positions(sym)
             except Exception:
