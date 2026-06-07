@@ -1100,6 +1100,17 @@ class MEXCBot:
                 log.info(f'[{coin}] close réponse: success={result.get("success")} '
                          f'data={result.get("data")} code={result.get("code")} msg={result.get("message","")!r}')
                 if not result.get('success'):
+                    # code 2009 = "Position is nonexistent or closed" -> deja fermee (liquidation/ADL/SL natif).
+                    # Idempotence (NLM): verifier l'etat reel exchange; si absente -> succes, stop la boucle (anti-phantom).
+                    if result.get('code') == 2009:
+                        try:
+                            pos_chk = self.rest.get_positions(sym)
+                        except Exception:
+                            pos_chk = None
+                        if not pos_chk:
+                            confirmed = True
+                            log.info(f'[{coin}] code 2009 + position absente exchange -> deja fermee (idempotent), state nettoye')
+                            break
                     log.error(f'[{coin}] ERREUR fermeture attempt={attempt}: {json.dumps(result)}')
                     await asyncio.sleep(2)
                     continue
