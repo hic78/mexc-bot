@@ -102,6 +102,10 @@ TAKER_FEE  = float(os.getenv('TAKER_FEE',  0.0008))  # 0.08%/side empirique (0.1
 VP_PCT     = int(os.getenv('VP_PCT', 90))            # C150-OPTIMUS: vol_pct=90 (validé DSR=1.0)
 VP_WIN     = int(os.getenv('VP_WIN', 500))           # Fenetre ATR (barres 1h)
 
+# ── TIME-STOP 4h (C150-OPTIMUS, validé +0.82 Sharpe WFE 0.97 DSR 1.0) ─
+# Sortie marché si position pas profitable à MIN_HOLD_HOURS (le trail ne s'active jamais sur perte)
+TIME_STOP_ACTIVE = os.getenv('TIME_STOP_ACTIVE', '1') == '1'
+
 # ── CYCLE 6 TOGGLES (desactives pour Backtest v6 Optimal) ─
 USE_PARTIAL_EXIT       = os.getenv('USE_PARTIAL_EXIT', '0') == '1'
 PARTIAL_TP_PCT         = float(os.getenv('PARTIAL_TP_PCT', 0.0122))

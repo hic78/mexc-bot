@@ -26,7 +26,7 @@ from config import (
     DONCHIAN_PERIOD, EMA_1H_PERIOD, EMA_4H_PERIOD, ATR_PERIOD,
     ADX_PERIOD, ADX_MIN, TRAIL_ACT, TRAIL_DIST, ATR_SL_MULT, MIN_HOLD_HOURS,
     LEVERAGE, CAPITAL_PCT, SL_PCT, TP_PCT, MARGIN_PCT, MAX_POSITIONS,
-    MHH, VP_PCT, VP_WIN, TAKER_FEE,
+    MHH, VP_PCT, VP_WIN, TAKER_FEE, TIME_STOP_ACTIVE,
     DRY_RUN, TG_TOKEN, TG_CHAT,
     to_mexc_symbol, to_mexc_interval, get_contract_size, init_contract_sizes,
     USE_PARTIAL_EXIT, PARTIAL_TP_PCT, PARTIAL_EXIT_RATIO,
@@ -698,6 +698,10 @@ class MEXCBot:
         gain  = (best_price - entry_price) / entry_price * (1 if direction == 'LONG' else -1)
 
         if gain < act_t:
+            if TIME_STOP_ACTIVE:
+                log.info(f'[{coin}] TIME_STOP @ {hours_held_tr:.1f}h: gain={gain*100:.2f}% < seuil trail {act_t*100:.2f}% → sortie marché')
+                await self.close_position(coin, direction, reason='TIME_STOP')
+                return
             log.debug(f'[{coin}] trail: gain={gain*100:.3f}% < act_t={act_t*100:.3f}% → HOLD')
             return
 
