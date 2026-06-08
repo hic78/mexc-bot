@@ -26,7 +26,7 @@ from config import (
     DONCHIAN_PERIOD, EMA_1H_PERIOD, EMA_4H_PERIOD, ATR_PERIOD,
     ADX_PERIOD, ADX_MIN, TRAIL_ACT, TRAIL_DIST, ATR_SL_MULT, MIN_HOLD_HOURS,
     LEVERAGE, CAPITAL_PCT, SL_PCT, TP_PCT, MARGIN_PCT, MAX_POSITIONS,
-    MHH, VP_PCT, VP_WIN, TAKER_FEE, TIME_STOP_ACTIVE,
+    MHH, VP_PCT, VP_WIN, TAKER_FEE, TIME_STOP_ACTIVE, ENTRY_1H_ONLY,
     DRY_RUN, TG_TOKEN, TG_CHAT,
     to_mexc_symbol, to_mexc_interval, get_contract_size, init_contract_sizes,
     USE_PARTIAL_EXIT, PARTIAL_TP_PCT, PARTIAL_EXIT_RATIO,
@@ -472,7 +472,7 @@ class MEXCBot:
 
         # Intrabar signal: vérifier Donchian sur chaque close 1m (parité Champion v4 override_price)
         # Champion v4 vérifie toutes les 3m — MEXC vérifie toutes les 1m (meilleure granularité)
-        if (new_bar and not self.positions.get(coin)
+        if (not ENTRY_1H_ONLY and new_bar and not self.positions.get(coin)
                 and len(self.positions) < MAX_POSITIONS
                 and len(deque_1m) >= 2):
             bars_1h = list(self.candles[coin]['1h'])
@@ -754,6 +754,10 @@ class MEXCBot:
             for tf in ['1h', '4h', '1m']:
                 try:
                     candles = self.rest.get_klines_full(sym, to_mexc_interval(tf), limit=1400)
+                    # MODE 1H STRICT: exclure la barre EN COURS (non fermée) pour 1h/4h
+                    # → Donchian, EMA, ATR, CS-veto, Markov tous sur barres FERMÉES (parité backtest, NLM)
+                    if ENTRY_1H_ONLY and tf in ('1h', '4h') and len(candles) > 1:
+                        candles = candles[:-1]
                     self.candles[coin][tf].clear()
                     self.candles[coin][tf].extend(candles)
                 except Exception as e:

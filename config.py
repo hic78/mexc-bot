@@ -106,6 +106,10 @@ VP_WIN     = int(os.getenv('VP_WIN', 500))           # Fenetre ATR (barres 1h)
 # Sortie marché si position pas profitable à MIN_HOLD_HOURS (le trail ne s'active jamais sur perte)
 TIME_STOP_ACTIVE = os.getenv('TIME_STOP_ACTIVE', '1') == '1'
 
+# ── MODE 1H STRICT (NLM validé): entrée sur barre 1h FERMÉE seulement (pas intrabar 1m) ─
+# Élimine les 43%% de faux signaux intrabar. Sorties restent intra-bar (SL/trail réactifs).
+ENTRY_1H_ONLY = os.getenv('ENTRY_1H_ONLY', '1') == '1'
+
 # ── CYCLE 6 TOGGLES (desactives pour Backtest v6 Optimal) ─
 USE_PARTIAL_EXIT       = os.getenv('USE_PARTIAL_EXIT', '0') == '1'
 PARTIAL_TP_PCT         = float(os.getenv('PARTIAL_TP_PCT', 0.0122))
