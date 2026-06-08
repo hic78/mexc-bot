@@ -809,11 +809,6 @@ class MEXCBot:
                 continue
 
             log.info(f'[{coin}] SIGNAL {signal} détecté! ATR={atr_val:.6f}')
-            await tg_send(
-                f'📡 <b>Signal {signal} — {coin}</b>\n'
-                f'Prix: ${bars_1h[-1]["c"]:.4f} | ATR: {atr_val:.4f}\n'
-                f'VP filter: ✅ passé | Ouverture...'
-            )
             self._entered_in_bar[coin] = current_1h_ts
             try:
                 await self.open_position(coin, signal, atr_val)
