@@ -182,9 +182,13 @@ def compute_signal(candles_1h: list, candles_4h: list, coin: str = '',
         return 'NONE', 0.0
     current_atr = atr_series[-1]
 
-    # VP filter: si ATR > VP_PCT percentile → trop volatil, skip (parité backtest line 969: atr[i] > vol_thr[i])
-    # Exclut la barre courante comme Champion v4 : atr_series.iloc[-VP_WIN-1:-1]
-    atr_window = atr_series[-(VP_WIN + 1):-1]
+    # VP filter: si ATR > VP_PCT percentile → trop volatil, skip (parité backtest: atr[i] > vthr[i])
+    # Mode 1h strict (override_price=None): candles[-1]=barre FERMÉE i → inclure i (= backtest exp_engine)
+    # Mode intrabar (override_price): candles[-1]=barre en cours → exclure la dernière
+    if override_price is None:
+        atr_window = atr_series[-VP_WIN:]           # inclut la barre fermée i (parité backtest)
+    else:
+        atr_window = atr_series[-(VP_WIN + 1):-1]   # exclut la barre en cours (intrabar)
     vp_threshold = None
     if len(atr_window) >= 50:
         vp_threshold = np.percentile(atr_window, VP_PCT)
@@ -216,7 +220,9 @@ def compute_signal(candles_1h: list, candles_4h: list, coin: str = '',
 
     # ADX filter: skip ranging markets (entry only)
     if ADX_PERIOD > 0 and ADX_MIN > 0:
-        adx_val = calc_adx(candles_1h[:-1], ADX_PERIOD)  # shift(1): barre precedente
+        # Mode 1h strict: candles[-1]=barre FERMÉE i → inclure i (= backtest adx[i]). Intrabar → exclure.
+        _adx_bars = candles_1h if override_price is None else candles_1h[:-1]
+        adx_val = calc_adx(_adx_bars, ADX_PERIOD)
         if adx_val < ADX_MIN:
             log.debug(f'{tag} ADX filter: {adx_val:.1f} < {ADX_MIN} — signal ignore')
             return 'NONE', 0.0
