@@ -409,6 +409,9 @@ class MEXCBot:
             for tf in ['1h', '1m', '4h']:
                 try:
                     candles = self.rest.get_klines_full(sym, to_mexc_interval(tf), limit=1400)
+                    # MODE 1H STRICT: exclure la barre EN COURS dès le préchargement (cohérence)
+                    if ENTRY_1H_ONLY and tf in ('1h', '4h') and len(candles) > 1:
+                        candles = candles[:-1]
                     self.candles[coin][tf].extend(candles)
                     log.info(f'  {coin} {tf}: {len(candles)} candles chargées')
                 except Exception as e:
