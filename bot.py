@@ -831,8 +831,11 @@ class MEXCBot:
                 _keep, conv_mult, _rsn = optimus.optimus_gate(direction, coin, [x['c'] for x in list(self.candles[coin]['1h'])], _css)
                 log.info(f'[{coin}] OPTIMUS ACTIF: {direction} keep={_keep} conv_mult={conv_mult:.2f} {_rsn}')
                 if not _keep:
+                    await tg_send(f'🚫 <b>{coin} {direction}</b> bloqué — {_rsn}')
                     self._opening_coins.discard(coin)
                     return
+                else:
+                    await tg_send(f'✅ <b>{coin} {direction}</b> validé OPTIMUS — {_rsn}')
             except Exception as _ge:
                 log.warning(f'[{coin}] OPTIMUS gate erreur (ouvre sans gate): {_ge}')
         sym  = to_mexc_symbol(coin)
