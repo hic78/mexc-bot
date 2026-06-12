@@ -1,0 +1,43 @@
+{"ts": "2026-06-12T12:32:43.852543+00:00", "event": "boot", "equity0": 110.57164647, "dry_run": true, "lev": 2, "q": 5, "universe": ["BTC", "ETH", "SOL", "XRP", "DOGE", "BNB", "AVAX", "LINK", "LTC", "ADA", "DOT", "NEAR", "UNI", "TRX", "APT", "FIL"]}
+{"ts": "2026-06-12T12:32:44.525765+00:00", "event": "cycle_start", "balance": 110.57164647659, "equity": 110.57164647, "equity0": 110.57164647}
+{"ts": "2026-06-12T12:32:50.167897+00:00", "event": "rebalance_skip", "reason": "not_enough_coins", "valid": 0}
+{"ts": "2026-06-12T12:33:52.682428+00:00", "event": "boot", "equity0": 110.57164647, "dry_run": true, "lev": 2, "q": 5, "universe": ["BTC", "ETH", "SOL", "XRP", "DOGE", "BNB", "AVAX", "LINK", "LTC", "ADA", "DOT", "NEAR", "UNI", "TRX", "APT"]}
+{"ts": "2026-06-12T12:33:53.239137+00:00", "event": "cycle_start", "balance": 110.57164647659, "equity": 110.57164647, "equity0": 110.57164647}
+{"ts": "2026-06-12T12:33:58.175560+00:00", "event": "targets", "longs": ["XRP", "DOGE", "LINK", "BNB", "NEAR"], "shorts": ["TRX", "AVAX", "APT", "LTC", "ETH"], "scores": {"BTC": -53.325, "ETH": -53.758, "SOL": -47.619, "XRP": -39.373, "DOGE": -36.434, "BNB": -20.838, "AVAX": -60.957, "LINK": -33.7, "LTC": -55.058, "ADA": -50.444, "DOT": -51.224, "NEAR": 13.89, "UNI": -49.892, "TRX": -78.613, "APT": -57.598}}
+{"ts": "2026-06-12T12:33:58.453979+00:00", "event": "order_dry", "action": "open", "coin": "XRP", "dir": 1, "qty": 18, "side": 1}
+{"ts": "2026-06-12T12:33:58.454321+00:00", "event": "order_dry", "action": "open", "coin": "DOGE", "dir": 1, "qty": 2, "side": 1}
+{"ts": "2026-06-12T12:33:58.454548+00:00", "event": "order_dry", "action": "open", "coin": "LINK", "dir": 1, "qty": 25, "side": 1}
+{"ts": "2026-06-12T12:33:58.454748+00:00", "event": "order_dry", "action": "open", "coin": "BNB", "dir": 1, "qty": 3, "side": 1}
+{"ts": "2026-06-12T12:33:58.454960+00:00", "event": "order_dry", "action": "open", "coin": "NEAR", "dir": 1, "qty": 9, "side": 1}
+{"ts": "2026-06-12T12:33:58.455183+00:00", "event": "order_dry", "action": "open", "coin": "TRX", "dir": -1, "qty": 6, "side": 3}
+{"ts": "2026-06-12T12:33:58.502098+00:00", "event": "order_dry", "action": "open", "coin": "AVAX", "dir": -1, "qty": 30, "side": 3}
+{"ts": "2026-06-12T12:33:58.502691+00:00", "event": "order_dry", "action": "open", "coin": "APT", "dir": -1, "qty": 302, "side": 3}
+{"ts": "2026-06-12T12:33:58.502902+00:00", "event": "order_dry", "action": "open", "coin": "LTC", "dir": -1, "qty": 46, "side": 3}
+{"ts": "2026-06-12T12:33:58.503152+00:00", "event": "order_dry", "action": "open", "coin": "ETH", "dir": -1, "qty": 1, "side": 3}
+{"ts": "2026-06-12T12:33:58.503410+00:00", "event": "cycle_end", "n_targets": 10}
+{"ts": "2026-06-12T12:36:25.934062+00:00", "event": "boot", "equity0": 110.57164647, "dry_run": false, "lev": 2, "q": 5, "universe": ["BTC", "ETH", "SOL", "XRP", "DOGE", "BNB", "AVAX", "LINK", "LTC", "ADA", "DOT", "NEAR", "UNI", "TRX", "APT"]}
+{"ts": "2026-06-12T12:36:26.463430+00:00", "event": "cycle_start", "balance": 110.57164647659, "equity": 110.57164647, "equity0": 110.57164647}
+{"ts": "2026-06-12T12:36:31.536359+00:00", "event": "targets", "longs": ["XRP", "DOGE", "LINK", "BNB", "NEAR"], "shorts": ["TRX", "AVAX", "APT", "LTC", "ETH"], "scores": {"BTC": -53.48, "ETH": -53.813, "SOL": -47.739, "XRP": -39.567, "DOGE": -36.818, "BNB": -21.005, "AVAX": -61.324, "LINK": -34.003, "LTC": -55.196, "ADA": -50.7, "DOT": -51.224, "NEAR": 12.829, "UNI": -50.433, "TRX": -79.498, "APT": -58.074}}
+{"ts": "2026-06-12T12:36:32.538834+00:00", "event": "order", "action": "open", "coin": "XRP", "dir": 1, "qty": 18, "side": 1, "resp": {"success": true, "code": 0, "data": 820394925383354368}}
+{"ts": "2026-06-12T12:36:33.223625+00:00", "event": "order", "action": "open", "coin": "DOGE", "dir": 1, "qty": 2, "side": 1, "resp": {"success": true, "code": 0, "data": 820394928244300288}}
+{"ts": "2026-06-12T12:36:33.761204+00:00", "event": "order", "action": "open", "coin": "LINK", "dir": 1, "qty": 25, "side": 1, "resp": {"success": false, "code": 510, "message": "Requests are too frequent, please try again later"}}
+{"ts": "2026-06-12T12:36:34.305504+00:00", "event": "order", "action": "open", "coin": "BNB", "dir": 1, "qty": 3, "side": 1, "resp": {"success": false, "code": 510, "message": "Requests are too frequent, please try again later"}}
+{"ts": "2026-06-12T12:36:34.953643+00:00", "event": "order", "action": "open", "coin": "NEAR", "dir": 1, "qty": 9, "side": 1, "resp": {"success": true, "code": 0, "data": 820394935538132480}}
+{"ts": "2026-06-12T12:36:35.614416+00:00", "event": "order", "action": "open", "coin": "TRX", "dir": -1, "qty": 6, "side": 3, "resp": {"success": true, "code": 0, "data": 820394938289547264}}
+{"ts": "2026-06-12T12:36:36.144353+00:00", "event": "order", "action": "open", "coin": "AVAX", "dir": -1, "qty": 30, "side": 3, "resp": {"success": false, "code": 510, "message": "Requests are too frequent, please try again later"}}
+{"ts": "2026-06-12T12:36:36.685271+00:00", "event": "order", "action": "open", "coin": "APT", "dir": -1, "qty": 303, "side": 3, "resp": {"success": false, "code": 510, "message": "Requests are too frequent, please try again later"}}
+{"ts": "2026-06-12T12:36:37.357823+00:00", "event": "order", "action": "open", "coin": "LTC", "dir": -1, "qty": 46, "side": 3, "resp": {"success": true, "code": 0, "data": 820394945604078592}}
+{"ts": "2026-06-12T12:36:38.022296+00:00", "event": "order", "action": "open", "coin": "ETH", "dir": -1, "qty": 1, "side": 3, "resp": {"success": true, "code": 0, "data": 820394948380686848}}
+{"ts": "2026-06-12T12:36:38.044912+00:00", "event": "cycle_end", "n_targets": 10}
+{"ts": "2026-06-12T12:38:33.425222+00:00", "event": "boot", "equity0": 110.44936479, "dry_run": false, "lev": 2, "q": 5, "universe": ["BTC", "ETH", "SOL", "XRP", "DOGE", "BNB", "AVAX", "LINK", "LTC", "ADA", "DOT", "NEAR", "UNI", "TRX", "APT"]}
+{"ts": "2026-06-12T12:38:33.984522+00:00", "event": "cycle_start", "balance": 54.44548390651, "equity": 110.45016479, "equity0": 110.44936479}
+{"ts": "2026-06-12T12:38:38.850421+00:00", "event": "targets", "longs": ["XRP", "DOGE", "LINK", "BNB", "NEAR"], "shorts": ["TRX", "AVAX", "APT", "LTC", "ETH"], "scores": {"BTC": -53.653, "ETH": -53.964, "SOL": -47.976, "XRP": -39.595, "DOGE": -36.857, "BNB": -20.922, "AVAX": -61.39, "LINK": -34.003, "LTC": -55.265, "ADA": -50.7, "DOT": -51.479, "NEAR": 12.562, "UNI": -50.645, "TRX": -78.962, "APT": -58.719}}
+{"ts": "2026-06-12T12:38:39.872271+00:00", "event": "order", "action": "open", "coin": "LINK", "dir": 1, "qty": 12, "side": 1, "resp": {"success": true, "code": 0, "data": 820395459427321856}}
+{"ts": "2026-06-12T12:38:41.388141+00:00", "event": "order", "action": "open", "coin": "BNB", "dir": 1, "qty": 2, "side": 1, "resp": {"success": true, "code": 0, "data": 820395465727387648}}
+{"ts": "2026-06-12T12:38:42.907534+00:00", "event": "order", "action": "open", "coin": "AVAX", "dir": -1, "qty": 15, "side": 3, "resp": {"success": true, "code": 0, "data": 820395472065013248}}
+{"ts": "2026-06-12T12:38:44.846416+00:00", "event": "order", "action": "open", "coin": "APT", "dir": -1, "qty": 150, "side": 3, "resp": {"success": true, "code": 0, "data": 820395480317298176}}
+{"ts": "2026-06-12T12:38:45.660760+00:00", "event": "cycle_end", "n_targets": 10}
+{"ts": "2026-06-12T13:04:31.290690+00:00", "event": "boot", "equity0": 110.29408703, "dry_run": false, "lev": 2, "q": 5, "universe": ["BTC", "ETH", "SOL", "XRP", "DOGE", "BNB", "AVAX", "LINK", "LTC", "ADA", "DOT", "NEAR", "UNI", "TRX", "APT"]}
+{"ts": "2026-06-12T13:04:32.040441+00:00", "event": "cycle_start", "balance": 33.69789793531, "equity": 110.28828703, "equity0": 110.29408703}
+{"ts": "2026-06-12T13:04:36.828846+00:00", "event": "targets", "longs": ["XRP", "DOGE", "LINK", "BNB", "NEAR"], "shorts": ["TRX", "AVAX", "APT", "LTC", "ETH"], "scores": {"BTC": -51.042, "ETH": -51.624, "SOL": -45.415, "XRP": -37.532, "DOGE": -33.691, "BNB": -17.215, "AVAX": -60.0, "LINK": -31.284, "LTC": -52.549, "ADA": -50.214, "DOT": -48.91, "NEAR": 13.058, "UNI": -48.224, "TRX": -80.641, "APT": -56.797}}
+{"ts": "2026-06-12T13:04:37.108646+00:00", "event": "cycle_end", "n_targets": 10}
