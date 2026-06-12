@@ -13,7 +13,7 @@ except Exception:
 import mexc_client as _m
 ClientCls = getattr(_m, re.search(r'class (\w+)', open('/root/mexc-bot/mexc_client.py').read()).group(1))
 
-KILL_DD   = 0.15
+KILL_DD   = 0.30   # élargi: parité backtest (pire mois -27%), ne fire que sur catastrophe
 EQ0_FILE  = '/root/mexc-bot/xs_logs/equity0.txt'
 CD_FILE   = '/root/mexc-bot/xs_logs/monitor_cooldown.json'
 
