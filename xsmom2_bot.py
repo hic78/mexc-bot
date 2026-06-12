@@ -75,15 +75,133 @@ def tg(msg):
     except Exception as e:
         log.warning(f'tg erreur: {e}')
 
+# --- Commandes Telegram interactives (comme l'ancien bot) ---
+import threading
+STOP_FLAG = {'stop': False}
+
+def _tg_updates(offset):
+    try:
+        r = requests.get(f'https://api.telegram.org/bot{TG_TOKEN}/getUpdates',
+                         params={'offset': offset, 'timeout': 15}, timeout=20)
+        return r.json().get('result', [])
+    except Exception: return []
+
+def _handle_cmd(client, eq0, text):
+    cmd = text.strip().split()[0].lower()
+    ps = lambda: client.get_positions()
+    if cmd in ('/status', '/positions', '/s'):
+        p = ps(); eq = client.get_equity(); pnl = eq - eq0
+        L = [x['symbol'].replace('_USDT','') for x in p if x.get('positionType')==1]
+        S = [x['symbol'].replace('_USDT','') for x in p if x.get('positionType')==2]
+        return f"📊 STATUS\nEquity ${eq:.2f} | P&L {pnl:+.2f}$ ({(pnl/eq0*100) if eq0 else 0:+.1f}%)\n📈 LONG: {','.join(L) or '—'}\n📉 SHORT: {','.join(S) or '—'}\n{len(p)} positions"
+    if cmd in ('/balance', '/b'):
+        return f"💰 Balance dispo: ${client.get_balance():.2f}\n💼 Equity: ${client.get_equity():.2f}"
+    if cmd == '/pnl':
+        lines = []
+        for x in ps():
+            c = x['symbol'].replace('_USDT',''); d = 'L' if x.get('positionType')==1 else 'S'
+            up = x.get('unrealised', x.get('realised', 0))
+            lines.append(f"{c}({d}): {float(up or 0):+.3f}$")
+        return "📈 PnL par position:\n" + ("\n".join(lines) or '—')
+    if cmd == '/risk':
+        eq = client.get_equity(); dd = (1 - eq/eq0)*100 if eq0 else 0
+        return f"🛡️ RISK\nEquity ${eq:.2f} (initial ${eq0:.2f})\nDrawdown actuel: {dd:+.1f}%\nKill-switch: -{KILL_DD*100:.0f}% (à ${eq0*(1-KILL_DD):.2f})\nLevier: {LEVERAGE}x | Q={Q}"
+    if cmd == '/config':
+        return f"⚙️ CONFIG\nUnivers ({len(UNIVERSE)}): {','.join(UNIVERSE)}\nQ={Q} LEV={LEVERAGE} MARGIN={MARGIN_PCT}\nRebal={REBAL_H}h | Horizons={HORIZONS}\nKill=-{KILL_DD*100:.0f}% | Exéc=MARKET | Barre=FERMÉE"
+    if cmd in ('/coins', '/coin'):
+        return f"🪙 Univers ({len(UNIVERSE)} coins):\n{', '.join(UNIVERSE)}"
+    if cmd == '/orders':
+        lines = []
+        for x in ps():
+            c = x['symbol'].replace('_USDT',''); d = 'LONG' if x.get('positionType')==1 else 'SHORT'
+            ep = x.get('holdAvgPrice', x.get('openAvgPrice', '?')); vol = x.get('holdVol','?')
+            lines.append(f"{c} {d} vol={vol} @ {ep}")
+        return "📋 POSITIONS ouvertes:\n" + ("\n".join(lines) or '—') + "\n(xsmom2 = rebalance 24h, pas de SL fixe — sortie au prochain rebalance)"
+    if cmd == '/trades':
+        try:
+            evs = [json.loads(l) for l in open(os.path.join(LOG_DIR,'events.jsonl')) if '"order"' in l or 'order_dry' in l]
+            evs = [e for e in evs if e.get('event','').startswith('order')][-10:]
+            lines = [f"{e['ts'][11:19]} {e.get('action','')} {e.get('coin','')} {('L' if e.get('dir')==1 else 'S')} qty={e.get('qty','')}" for e in evs]
+            return "📜 10 derniers ordres:\n" + ("\n".join(lines) or '—')
+        except Exception as e: return f"trades: {e}"
+    if cmd == '/logs':
+        try:
+            ls = open(os.path.join(LOG_DIR,'xsmom2.log')).readlines()[-15:]
+            return "📄 15 dernières lignes:\n" + ''.join(l.split('|',2)[-1] if '|' in l else l for l in ls)[-3500:]
+        except Exception as e: return f"logs: {e}"
+    if cmd == '/close':
+        parts = text.split()
+        if len(parts) < 2: return "Usage: /close COIN confirm"
+        coin = parts[1].upper()
+        if 'confirm' not in text.lower(): return f"⚠️ Fermer {coin} ? Confirme:\n/close {coin} confirm"
+        for x in ps():
+            if x['symbol'].replace('_USDT','') == coin:
+                d = 1 if x.get('positionType')==1 else -1
+                close_pos(client, coin, d, int(float(x.get('holdVol',0))))
+                return f"✅ {coin} fermé manuellement."
+        return f"❓ {coin} pas en position."
+    if cmd == '/addcoin':
+        parts = text.split()
+        if len(parts) < 2: return "Usage: /addcoin COIN"
+        coin = parts[1].upper()
+        if coin in UNIVERSE: return f"{coin} déjà dans l'univers."
+        UNIVERSE.append(coin); return f"✅ {coin} ajouté (effet au prochain rebalance). Univers: {len(UNIVERSE)}"
+    if cmd == '/removecoin':
+        parts = text.split()
+        if len(parts) < 2: return "Usage: /removecoin COIN"
+        coin = parts[1].upper()
+        if coin not in UNIVERSE: return f"{coin} pas dans l'univers."
+        UNIVERSE.remove(coin); return f"✅ {coin} retiré (effet au prochain rebalance). Univers: {len(UNIVERSE)}"
+    if cmd == '/stop':
+        if 'confirm' not in text.lower():
+            return "⚠️ /stop ferme TOUTES les positions + arrête le bot.\nConfirme avec: /stop confirm"
+        STOP_FLAG['stop'] = True
+        for x in ps():
+            c = x['symbol'].replace('_USDT',''); d = 1 if x.get('positionType')==1 else -1
+            close_pos(client, c, d, int(float(x.get('holdVol', 0)))); time.sleep(0.8)
+        return "🛑 STOP: toutes positions fermées. Bot s'arrête."
+    if cmd in ('/help', '/h', '/start'):
+        return ("📋 COMMANDES xsmom2\n"
+                "/status  — positions + P&L\n/balance — solde dispo\n/pnl     — P&L par position\n"
+                "/orders  — positions détaillées\n/trades  — 10 derniers ordres\n/coins   — univers\n"
+                "/risk    — drawdown + kill-switch\n/config  — paramètres\n/logs    — 15 dernières lignes\n"
+                "/close COIN confirm — ferme 1 position\n/addcoin COIN — ajoute un coin\n/removecoin COIN — retire un coin\n"
+                "/stop confirm — ferme tout + arrête\n/help    — cette aide")
+    return f"❓ Inconnue: {cmd}\n/help pour la liste"
+
+def telegram_loop(eq0):
+    """Thread séparé : écoute les commandes Telegram (client indépendant, thread-safe)."""
+    cli = MEXCRestClient()
+    off = 0
+    u = _tg_updates(0)
+    if u: off = u[-1]['update_id'] + 1   # ignore les vieux messages
+    log.info('📱 Commandes Telegram ACTIVES (/status /balance /pnl /risk /config /stop /help)')
+    while True:
+        try:
+            for upd in _tg_updates(off):
+                off = upd['update_id'] + 1
+                m = upd.get('message', {}); txt = m.get('text', '')
+                if str(m.get('chat', {}).get('id')) != str(TG_CHAT): continue  # owner only
+                if txt.startswith('/'):
+                    log.info(f'📱 commande: {txt}')
+                    try: tg(_handle_cmd(cli, eq0, txt))
+                    except Exception as e:
+                        log.error(f'cmd err: {e}\n{traceback.format_exc()}'); tg(f'Erreur: {str(e)[:100]}')
+        except Exception as e:
+            log.warning(f'telegram_loop: {e}')
+        time.sleep(2)
+
 # ===================== SIGNAL =====================
 def fetch_closes(client, coin):
     sym = to_mexc_symbol(coin)
     try:
         k = client.get_klines_full(sym, INTERVAL, KLINES)
-        if not k or len(k) < max(HORIZONS) + 5:
-            log.warning(f'[{coin}] klines insuffisants: {len(k) if k else 0} (besoin {max(HORIZONS)+5})')
+        if not k or len(k) < max(HORIZONS) + 6:
+            log.warning(f'[{coin}] klines insuffisants: {len(k) if k else 0} (besoin {max(HORIZONS)+6})')
             return None
-        return [b['c'] for b in k]
+        # ⚠️ PARITÉ BACKTEST: on DROP la dernière barre (EN COURS, pas fermée).
+        # Sinon le signal diffère du backtest (cf project_mode_1h_strict: barre fermée obligatoire).
+        return [b['c'] for b in k][:-1]
     except Exception as e:
         log.error(f'[{coin}] fetch_closes EXCEPTION: {e}\n{traceback.format_exc()}')
         return None
@@ -268,8 +386,12 @@ def main():
         log.info('   Si tout est correct (coins, sens, tailles) → export XS_DRY_RUN=0 et relance pour le RÉEL.')
         return
 
+    # thread commandes Telegram (écoute /status /balance /pnl /stop ...)
+    if TG_TOKEN and TG_CHAT:
+        threading.Thread(target=telegram_loop, args=(eq0,), daemon=True).start()
+
     # boucle réelle
-    while True:
+    while not STOP_FLAG['stop']:
         try:
             cont = rebalance(client, eq0)
             if not cont:
@@ -277,8 +399,12 @@ def main():
         except Exception as e:
             log.error(f'BOUCLE EXCEPTION: {e}\n{traceback.format_exc()}')
             jlog('loop_error', err=str(e)); tg(f'⚠️ Erreur boucle: {str(e)[:120]}')
-        log.info(f'😴 Sommeil {REBAL_H}h jusqu\'au prochain rebalance...')
-        time.sleep(REBAL_H * 3600)
+        log.info(f'😴 Sommeil {REBAL_H}h jusqu\'au prochain rebalance (interruptible par /stop)...')
+        slept = 0
+        while slept < REBAL_H * 3600 and not STOP_FLAG['stop']:
+            time.sleep(5); slept += 5
+    if STOP_FLAG['stop']:
+        log.info('🛑 Arrêt demandé via Telegram /stop.'); tg('Bot arrêté via /stop. Plus de trading.')
 
 if __name__ == '__main__':
     try:
