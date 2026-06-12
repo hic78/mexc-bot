@@ -18,7 +18,7 @@ Logs HAUTE QUALITÉ (standard MAS 2026) :
   - console                : INFO+
 Toute erreur est loggée avec traceback complet.
 """
-import os, sys, time, json, math, logging, traceback
+import os, sys, time, json, math, logging, traceback, statistics
 from logging.handlers import RotatingFileHandler
 from datetime import datetime, timezone
 
@@ -35,6 +35,9 @@ HORIZONS   = [168, 336, 720]                          # heures (1sem/2sem/1mois)
 VOL_WIN    = 168                                      # fenêtre vol (heures)
 REBAL_H    = int(os.getenv('XS_REBAL_H', '24'))       # rebalance toutes les 24h
 KILL_DD    = float(os.getenv('XS_KILL_DD', '0.15'))   # kill-switch -15%
+VT_TARGET  = 0.40                                      # vol cible annualisée (= backtest)
+VT_MIN     = float(os.getenv('XS_VT_MIN', '0.40'))    # backtest=0.2 mais sous le min MEXC sur $110 → 0.4
+VT_MAX     = float(os.getenv('XS_VT_MAX', '1.00'))    # backtest=3.0 mais sur-déploierait le compte → 1.0
 DRY_RUN    = os.getenv('XS_DRY_RUN', '1') != '0'      # défaut ON (sécurité)
 KLINES     = 800                                      # >720+vol
 INTERVAL   = 'Min60'
@@ -243,17 +246,43 @@ def compute_targets(client):
     for c in shorts: targets[c] = -1
     return targets, prices
 
-# ===================== SIZING (formule TESTÉE de bot.py) =====================
-def calc_qty(balance, price, coin):
-    """qty contrats = round(balance * MARGIN_PCT * LEVERAGE / (price * contract_size))."""
+# ===================== VOL-TARGETING (parité backtest, adapté au compte) =====================
+VT_HIST = os.path.join(LOG_DIR, 'equity_history.jsonl')
+def vt_scale(eq):
+    """Scale = clip(0.40/vol_réalisée_20j, VT_MIN, VT_MAX). Réduit l'expo en turbulence (= backtest).
+    1 point/jour. Warm-up 20j → scale 1.0. Borné [0.4, 1.0] car $110 ne peut pas faire 0.2-3.0."""
+    try:
+        hist = []
+        if os.path.exists(VT_HIST):
+            hist = [json.loads(l) for l in open(VT_HIST) if l.strip()][-40:]
+        # 1 enregistrement / jour max (évite la pollution si restarts multiples)
+        if not hist or (time.time() - hist[-1].get('ts', 0)) > 20*3600:
+            hist.append({'ts': time.time(), 'eq': eq})
+            with open(VT_HIST, 'w') as f:
+                for h in hist[-40:]: f.write(json.dumps(h) + '\n')
+        eqs = [h['eq'] for h in hist[-21:]]
+        if len(eqs) < 21:
+            log.info(f'📐 vol-targeting: warm-up {max(0,len(eqs)-1)}/20 jours → scale=1.00'); return 1.0
+        rets = [eqs[i]/eqs[i-1]-1 for i in range(1, len(eqs)) if eqs[i-1] > 0]
+        vol = statistics.stdev(rets) * math.sqrt(365)
+        s = max(VT_MIN, min(VT_MAX, VT_TARGET/(vol+1e-9)))
+        log.info(f'📐 vol-targeting: vol_réalisée={vol*100:.0f}% → scale={s:.2f} (cible {VT_TARGET*100:.0f}%)')
+        jlog('vol_target', vol=round(vol,4), scale=round(s,3))
+        return s
+    except Exception as e:
+        log.error(f'vt_scale EXCEPTION: {e}\n{traceback.format_exc()}'); return 1.0
+
+# ===================== SIZING (formule TESTÉE de bot.py + vol-targeting) =====================
+def calc_qty(balance, price, coin, vts=1.0):
+    """qty contrats = round(balance * MARGIN_PCT * LEVERAGE * vol_target_scale / (price * contract_size))."""
     cs = get_contract_size(coin)
     if not cs or price <= 0:
         log.error(f'[{coin}] calc_qty: cs={cs} price={price} invalide'); return 0
     margin = balance * MARGIN_PCT
-    notional = margin * LEVERAGE
+    notional = margin * LEVERAGE * vts   # vts = scale vol-targeting (parité backtest)
     qty_raw = notional / (price * cs)
     qty = max(1, round(qty_raw))
-    log.debug(f'[{coin}] calc_qty: bal={balance:.2f} margin={margin:.2f} notional={notional:.2f} px={price:.6f} cs={cs} raw={qty_raw:.3f} → {qty} contrats (≈${qty*price*cs:.1f})')
+    log.debug(f'[{coin}] calc_qty: bal={balance:.2f} margin={margin:.2f} vts={vts:.2f} notional={notional:.2f} px={price:.6f} cs={cs} raw={qty_raw:.3f} → {qty} contrats (≈${qty*price*cs:.1f})')
     return qty
 
 # ===================== POSITIONS =====================
@@ -333,6 +362,7 @@ def rebalance(client, equity0):
     targets, prices = compute_targets(client)
     if targets is None: return True  # skip ce cycle, continue
 
+    vts = vt_scale(eq)   # scale vol-targeting (parité backtest : réduit l'expo en turbulence)
     cur = current_positions(client)
     log.info(f'Positions actuelles: { {c: ("L" if d>0 else "S")+str(int(v)) for c,(d,v) in cur.items()} }')
 
@@ -348,7 +378,7 @@ def rebalance(client, equity0):
             log.debug(f'[{coin}] déjà en position {"L" if direction>0 else "S"}, on garde'); continue
         price = prices.get(coin)
         if not price: log.warning(f'[{coin}] pas de prix, skip open'); continue
-        qty = calc_qty(bal, price, coin)
+        qty = calc_qty(bal, price, coin, vts)
         if qty < 1: log.warning(f'[{coin}] qty={qty} < 1, skip'); continue
         open_pos(client, coin, direction, qty); time.sleep(0.8)
 
