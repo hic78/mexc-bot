@@ -45,7 +45,9 @@ try:
             online = p.get('pm2_env', {}).get('status') == 'online'
 except Exception:
     pass
+_TS = time.strftime('%Y-%m-%d %H:%M:%S')
 if not online:
+    print(f'{_TS} | 🔴 DOWN — pm2 xsmom2 != online')
     if can_alert('down', 30):
         tg('🔴 BOT DOWN — pm2 "xsmom2" != online ! Relance: pm2 restart xsmom2 (ou XS_DRY_RUN=0 ... pm2 start)')
     sys.exit(0)
@@ -56,6 +58,7 @@ try:
     L = sum(1 for p in ps if p.get('positionType') == 1)
     S = sum(1 for p in ps if p.get('positionType') == 2)
 except Exception as e:
+    print(f'{_TS} | ⚠️ API_ERROR: {str(e)[:80]}')
     if can_alert('api', 30): tg(f'⚠️ Erreur API (monitor): {str(e)[:100]}')
     sys.exit(0)
 
@@ -67,6 +70,7 @@ except Exception:
     try: open(EQ0_FILE, 'w').write(str(eq))
     except Exception: pass
 dd = (1 - eq/eq0) * 100 if eq0 else 0
+print(f'{_TS} | ✅ online | {len(ps)} pos ({L}L/{S}S) | eq={eq:.2f} | dd={dd:+.1f}%')  # heartbeat log
 
 # 3) checks → alertes (avec cooldown)
 problem = False
