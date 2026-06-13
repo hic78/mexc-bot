@@ -326,6 +326,51 @@ def _pos_vol(client, sym):
     except Exception: pass
     return 0.0
 
+def _open_orders_state2(client, sym):
+    """Liste des ordres ouverts (state==2) du symbole. Source : REST open_orders (peut laguer 1-5s)."""
+    try:
+        raw = client._get('/api/v1/private/order/open_orders/' + sym)
+        return [o for o in (raw.get('data') or []) if isinstance(o, dict) and o.get('state') == 2]
+    except Exception:
+        return []
+
+def _cancel_open_orders(client, sym, coin='', tries=4):
+    """BULLETPROOF : annule TOUS les ordres ouverts du symbole via cancel_all (atomique, documenté MEXC),
+    et VÉRIFIE qu'il n'en reste aucun. Évite les ordres limit fantômes (position surdimensionnée).
+
+    3 leçons recherche (NLM MEXC + docs officielles, 2026-06-13) :
+    - cancel_all prend {"symbol": sym} et annule TOUS les ordres non complétés du contrat en 1 appel atomique
+      (plus fiable que cancel oid-par-oid qui attend un TABLEAU ["id"], pas {"orderId": id}).
+    - Mode "Under Maintenance" : code 9999/510 fréquent sur cancel → retry agressif.
+    - Latence cache REST : après success=True, get_open_orders peut montrer state=2 encore 1-5s
+      (FAUX positif). On tolère ce lag (sleep 1.2s) avant de re-vérifier — la VÉRITÉ d'un fill
+      reste le delta de POSITION (géré dans place_maker), pas le state REST de l'ordre."""
+    for k in range(tries):
+        # 1) cancel_all atomique (avec retry maintenance)
+        try:
+            r = client._post('/api/v1/private/order/cancel_all', {'symbol': sym})
+            if r.get('code') in (9999, 510):       # maintenance / rate-limit
+                log.warning(f'[{coin}] cancel_all maintenance/limit (code {r.get("code")}), retry'); time.sleep(1.0 + k); continue
+        except Exception:
+            pass
+        time.sleep(1.2)   # laisser le cache REST se synchroniser (anti faux-positif)
+        # 2) vérification
+        left = _open_orders_state2(client, sym)
+        if not left:
+            return True   # plus rien d'ouvert ✅
+        # 3) fallback ciblé par oid si cancel_all n'a pas suffi (maintenance partielle)
+        for o in left:
+            try: client.cancel_order(o.get('orderId'))
+            except Exception: pass
+        time.sleep(1.0)
+    # dernier verdict après tolérance cache
+    time.sleep(1.0)
+    left = _open_orders_state2(client, sym)
+    if left:
+        log.error(f'[{coin}] ⚠️ {len(left)} ordre(s) state=2 PERSISTANT après cancel_all+oid+{tries} essais — vérifier maintenance MEXC. ids={[o.get("orderId") for o in left]}')
+        return False
+    return True
+
 def place_maker(client, sym, coin, side, qty):
     """Exécution MAKER ROBUSTE (anti-race) : limit post-only (type=2) au bid/ask.
     À chaque essai : poste → attend → ANNULE TOUJOURS → vérifie la POSITION réelle (pas l'ordre).
@@ -349,10 +394,10 @@ def place_maker(client, sym, coin, side, qty):
         oid = r.get('data')
         log.info(f'[{coin}] 📬 MAKER posté @ {price} vol={remaining} (essai {attempt+1}/{MAKER_CHASE}), attente {MAKER_WAIT}s...')
         time.sleep(MAKER_WAIT)
-        # ANTI-RACE : on annule TOUJOURS (sans risque — si déjà rempli, l'annulation échoue sans effet)
-        try: client.cancel_order(oid)
-        except Exception: pass
-        time.sleep(1.0)   # laisser l'annulation/fill se stabiliser
+        # ANTI-RACE + ANTI-FANTÔME : on annule TOUS les ordres ouverts du symbole, AVEC vérification
+        # (si déjà rempli, il n'y a rien à annuler ; sinon on garantit zéro ordre limit fantôme)
+        _cancel_open_orders(client, sym, coin)
+        time.sleep(0.6)   # laisser le fill se stabiliser
         # combien rempli ? (delta de POSITION réelle, pas de l'ordre)
         vol_now = _pos_vol(client, sym)
         filled = (vol_now - vol0) if side in (1, 3) else (vol0 - vol_now)   # open=+, close=-
@@ -364,6 +409,8 @@ def place_maker(client, sym, coin, side, qty):
             log.info(f'[{coin}] ✅ entièrement rempli en MAKER (0% frais)')
             return {'success': True, 'code': 0, 'maker': True}
         vol0 = vol_now   # nouvelle référence pour le prochain essai
+    # SÉCURITÉ FINALE : avant de partir, garantir 0 ordre limit fantôme qui traîne
+    _cancel_open_orders(client, sym, coin)
     # fallback TAKER pour le reliquat
     if remaining > 0:
         log.info(f'[{coin}] ⚡ fallback TAKER pour le reste ({remaining} contrats)')
@@ -394,11 +441,11 @@ def close_pos(client, coin, direction, qty):
         log.info(f'🟠 [DRY] CLOSE {"LONG" if direction==1 else "SHORT"} {coin} qty={qty} (side={side})')
         jlog('order_dry', action='close', coin=coin, dir=direction, qty=qty, side=side); return {'dry': True}
     try:
-        r = place_maker(client, sym, coin, side, qty) if USE_MAKER else _order_retry(client, sym, side, qty, coin)
+        # CLOSE = toujours TAKER (fiable) : le maker close ne remplit quasi jamais (test live) → fallback taker de toute façon
+        r = _order_retry(client, sym, side, qty, coin)
         ok = r.get('success', False) or r.get('code') == 0
-        mk = ' [MAKER]' if r.get('maker') else (' [taker]' if USE_MAKER else '')
-        log.info(f'{"✅" if ok else "❌"} CLOSE {coin} qty={qty}{mk} → {r}')
-        jlog('order', action='close', coin=coin, dir=direction, qty=qty, side=side, maker=bool(r.get('maker')), resp=r); return r
+        log.info(f'{"✅" if ok else "❌"} CLOSE {coin} qty={qty} [taker] → {r}')
+        jlog('order', action='close', coin=coin, dir=direction, qty=qty, side=side, resp=r); return r
     except Exception as e:
         log.error(f'[{coin}] close_pos EXCEPTION: {e}\n{traceback.format_exc()}')
         jlog('order_error', action='close', coin=coin, err=str(e)); return None
