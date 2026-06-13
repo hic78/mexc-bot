@@ -24,7 +24,7 @@ from datetime import datetime, timezone
 
 # --- réutilise le client + helpers TESTÉS (mexc-bot existant) ---
 from mexc_client import MEXCRestClient
-from config import to_mexc_symbol, get_contract_size, init_contract_sizes
+from config import to_mexc_symbol, get_contract_size, init_contract_sizes, get_price_decimals
 
 # ===================== CONFIG (indépendante de l'ancien bot) =====================
 UNIVERSE   = os.getenv('XS_UNIVERSE', 'BTC,ETH,SOL,XRP,DOGE,BNB,AVAX,LINK,LTC,ADA,DOT,NEAR,UNI,TRX,APT').split(',')
@@ -39,6 +39,9 @@ VT_TARGET  = 0.40                                      # vol cible annualisée (
 VT_MIN     = float(os.getenv('XS_VT_MIN', '0.40'))    # backtest=0.2 mais sous le min MEXC sur $110 → 0.4
 VT_MAX     = float(os.getenv('XS_VT_MAX', '1.00'))    # backtest=3.0 mais sur-déploierait le compte → 1.0
 DRY_RUN    = os.getenv('XS_DRY_RUN', '1') != '0'      # défaut ON (sécurité)
+USE_MAKER  = os.getenv('XS_MAKER', '1') != '0'        # exécution MAKER (post-only limit) au lieu de market
+MAKER_CHASE= int(os.getenv('XS_MAKER_CHASE', '3'))    # nb de re-post si pas rempli, puis fallback taker
+MAKER_WAIT = int(os.getenv('XS_MAKER_WAIT', '6'))     # secondes d'attente de fill par essai
 KLINES     = 800                                      # >720+vol
 INTERVAL   = 'Min60'
 
@@ -315,17 +318,72 @@ def _order_retry(client, sym, side, qty, coin, max_try=4):
         return r  # autre erreur → on rend
     return r
 
+def _pos_vol(client, sym):
+    """Volume de position (contrats) pour ce symbole. 0 si pas de position."""
+    try:
+        for p in client.get_positions(sym):
+            if p.get('symbol') == sym: return float(p.get('holdVol', 0) or 0)
+    except Exception: pass
+    return 0.0
+
+def place_maker(client, sym, coin, side, qty):
+    """Exécution MAKER ROBUSTE (anti-race) : limit post-only (type=2) au bid/ask.
+    À chaque essai : poste → attend → ANNULE TOUJOURS → vérifie la POSITION réelle (pas l'ordre).
+    Re-poste le reliquat non rempli (chase). Fallback taker pour le reste après MAKER_CHASE essais."""
+    try: dec = get_price_decimals(coin)
+    except Exception: dec = 4
+    vol0 = _pos_vol(client, sym)          # position AVANT (référence)
+    remaining = qty; got_maker = False
+    for attempt in range(MAKER_CHASE):
+        tk = client.get_ticker(sym)
+        bid = float(tk.get('bid1', 0) or 0); ask = float(tk.get('ask1', 0) or 0)
+        if bid <= 0 or ask <= 0:
+            log.warning(f'[{coin}] pas de bid/ask → fallback taker'); break
+        price = round(bid if side in (1, 2) else ask, dec)   # achat→bid, vente→ask = maker
+        body = {'symbol': sym, 'price': price, 'vol': remaining, 'side': side, 'type': 2, 'openType': 1, 'leverage': LEVERAGE}
+        r = client._post('/api/v1/private/order/submit', body)
+        if r.get('code') == 510:
+            log.warning(f'[{coin}] maker rate-limit, attente 2s'); time.sleep(2); continue
+        if not (r.get('success') or r.get('code') == 0):
+            log.warning(f'[{coin}] maker rejeté ({r.get("code")}: {r.get("message","")}) → fallback taker'); break
+        oid = r.get('data')
+        log.info(f'[{coin}] 📬 MAKER posté @ {price} vol={remaining} (essai {attempt+1}/{MAKER_CHASE}), attente {MAKER_WAIT}s...')
+        time.sleep(MAKER_WAIT)
+        # ANTI-RACE : on annule TOUJOURS (sans risque — si déjà rempli, l'annulation échoue sans effet)
+        try: client.cancel_order(oid)
+        except Exception: pass
+        time.sleep(1.0)   # laisser l'annulation/fill se stabiliser
+        # combien rempli ? (delta de POSITION réelle, pas de l'ordre)
+        vol_now = _pos_vol(client, sym)
+        filled = (vol_now - vol0) if side in (1, 3) else (vol0 - vol_now)   # open=+, close=-
+        filled = max(0.0, filled)
+        remaining = max(0, qty - round(filled))
+        if filled > 0: got_maker = True
+        log.info(f'[{coin}] rempli {filled:.0f}/{qty} en maker, reste {remaining}')
+        if remaining <= 0:
+            log.info(f'[{coin}] ✅ entièrement rempli en MAKER (0% frais)')
+            return {'success': True, 'code': 0, 'maker': True}
+        vol0 = vol_now   # nouvelle référence pour le prochain essai
+    # fallback TAKER pour le reliquat
+    if remaining > 0:
+        log.info(f'[{coin}] ⚡ fallback TAKER pour le reste ({remaining} contrats)')
+        rt = _order_retry(client, sym, side, remaining, coin)
+        rt['maker'] = got_maker   # maker partiel ?
+        return rt
+    return {'success': True, 'code': 0, 'maker': got_maker}
+
 def open_pos(client, coin, direction, qty):
     sym = to_mexc_symbol(coin); side = 1 if direction == 1 else 3
     if DRY_RUN:
-        log.info(f'🔵 [DRY] OPEN {"LONG" if direction==1 else "SHORT"} {coin} qty={qty} (side={side}, lev={LEVERAGE})')
+        log.info(f'🔵 [DRY] OPEN {"LONG" if direction==1 else "SHORT"} {coin} qty={qty} ({"MAKER" if USE_MAKER else "MARKET"}, side={side}, lev={LEVERAGE})')
         jlog('order_dry', action='open', coin=coin, dir=direction, qty=qty, side=side); return {'dry': True}
     try:
         client.set_leverage(sym, LEVERAGE)
-        r = _order_retry(client, sym, side, qty, coin)
+        r = place_maker(client, sym, coin, side, qty) if USE_MAKER else _order_retry(client, sym, side, qty, coin)
         ok = r.get('success', False) or r.get('code') == 0
-        log.info(f'{"✅" if ok else "❌"} OPEN {"LONG" if direction==1 else "SHORT"} {coin} qty={qty} → {r}')
-        jlog('order', action='open', coin=coin, dir=direction, qty=qty, side=side, resp=r); return r
+        mk = ' [MAKER]' if r.get('maker') else (' [taker]' if USE_MAKER else '')
+        log.info(f'{"✅" if ok else "❌"} OPEN {"LONG" if direction==1 else "SHORT"} {coin} qty={qty}{mk} → {r}')
+        jlog('order', action='open', coin=coin, dir=direction, qty=qty, side=side, maker=bool(r.get('maker')), resp=r); return r
     except Exception as e:
         log.error(f'[{coin}] open_pos EXCEPTION: {e}\n{traceback.format_exc()}')
         jlog('order_error', action='open', coin=coin, err=str(e)); return None
@@ -336,10 +394,11 @@ def close_pos(client, coin, direction, qty):
         log.info(f'🟠 [DRY] CLOSE {"LONG" if direction==1 else "SHORT"} {coin} qty={qty} (side={side})')
         jlog('order_dry', action='close', coin=coin, dir=direction, qty=qty, side=side); return {'dry': True}
     try:
-        r = _order_retry(client, sym, side, qty, coin)
+        r = place_maker(client, sym, coin, side, qty) if USE_MAKER else _order_retry(client, sym, side, qty, coin)
         ok = r.get('success', False) or r.get('code') == 0
-        log.info(f'{"✅" if ok else "❌"} CLOSE {coin} qty={qty} → {r}')
-        jlog('order', action='close', coin=coin, dir=direction, qty=qty, side=side, resp=r); return r
+        mk = ' [MAKER]' if r.get('maker') else (' [taker]' if USE_MAKER else '')
+        log.info(f'{"✅" if ok else "❌"} CLOSE {coin} qty={qty}{mk} → {r}')
+        jlog('order', action='close', coin=coin, dir=direction, qty=qty, side=side, maker=bool(r.get('maker')), resp=r); return r
     except Exception as e:
         log.error(f'[{coin}] close_pos EXCEPTION: {e}\n{traceback.format_exc()}')
         jlog('order_error', action='close', coin=coin, err=str(e)); return None
