@@ -91,3 +91,10 @@
 {"ts": "2026-06-14T08:50:12.794766+00:00", "event": "cycle_start", "balance": 41.40430127315, "equity": 109.79945485, "equity0": 109.79752485}
 {"ts": "2026-06-14T08:50:17.435249+00:00", "event": "targets", "longs": ["SOL", "BNB", "LINK", "DOGE", "NEAR"], "shorts": ["TRX", "AVAX", "UNI", "BTC", "APT"], "scores": {"BTC": -66.581, "ETH": -65.412, "SOL": -53.34, "XRP": -55.145, "DOGE": -48.481, "BNB": -53.051, "AVAX": -83.309, "LINK": -51.865, "LTC": -59.494, "ADA": -63.992, "DOT": -62.489, "NEAR": 22.607, "UNI": -72.248, "TRX": -90.807, "APT": -66.393}}
 {"ts": "2026-06-14T08:50:17.748386+00:00", "event": "cycle_end", "n_targets": 10}
+{"ts": "2026-06-15T08:50:33.700203+00:00", "event": "cycle_start", "balance": 45.27207575597, "equity": 112.10630485, "equity0": 109.79752485}
+{"ts": "2026-06-15T08:50:37.880401+00:00", "event": "targets", "longs": ["XRP", "BNB", "LINK", "SOL", "NEAR"], "shorts": ["TRX", "AVAX", "ETH", "BTC", "APT"], "scores": {"BTC": -52.812, "ETH": -56.976, "SOL": -32.385, "XRP": -38.139, "DOGE": -38.909, "BNB": -35.741, "AVAX": -69.373, "LINK": -33.684, "LTC": -50.88, "ADA": -42.562, "DOT": -43.188, "NEAR": 50.423, "UNI": -51.403, "TRX": -81.811, "APT": -51.857}}
+{"ts": "2026-06-15T08:50:38.553273+00:00", "event": "order", "action": "close", "coin": "UNI", "dir": -1, "qty": 78, "side": 2, "resp": {"success": true, "code": 0, "data": 821425239442720768}}
+{"ts": "2026-06-15T08:50:39.720917+00:00", "event": "order", "action": "close", "coin": "DOGE", "dir": 1, "qty": 2, "side": 4, "resp": {"success": true, "code": 0, "data": 821425244354417664}}
+{"ts": "2026-06-15T08:51:02.251695+00:00", "event": "order", "action": "open", "coin": "XRP", "dir": 1, "qty": 7, "side": 1, "maker": true, "resp": {"success": true, "code": 0, "maker": true}}
+{"ts": "2026-06-15T08:51:17.387203+00:00", "event": "order", "action": "open", "coin": "ETH", "dir": -1, "qty": 1, "side": 3, "maker": true, "resp": {"success": true, "code": 0, "maker": true}}
+{"ts": "2026-06-15T08:51:18.191330+00:00", "event": "cycle_end", "n_targets": 10}
