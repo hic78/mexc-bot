@@ -110,3 +110,10 @@
 {"ts": "2026-06-17T08:53:14.911131+00:00", "event": "cycle_start", "balance": 54.20300674874, "equity": 112.90687819, "equity0": 109.79752485}
 {"ts": "2026-06-17T08:53:19.639200+00:00", "event": "targets", "longs": ["LINK", "XRP", "SOL", "NEAR", "UNI"], "shorts": ["TRX", "AVAX", "APT", "ADA", "DOGE"], "scores": {"BTC": -27.659, "ETH": -19.296, "SOL": -3.809, "XRP": -11.106, "DOGE": -30.773, "BNB": -21.896, "AVAX": -50.18, "LINK": -13.501, "LTC": -28.555, "ADA": -47.932, "DOT": -22.424, "NEAR": 36.943, "UNI": 71.042, "TRX": -68.36, "APT": -48.491}}
 {"ts": "2026-06-17T08:53:19.964103+00:00", "event": "cycle_end", "n_targets": 10}
+{"ts": "2026-06-18T08:53:35.540370+00:00", "event": "cycle_start", "balance": 54.18834611734, "equity": 111.35191756, "equity0": 109.79752485}
+{"ts": "2026-06-18T08:53:40.094741+00:00", "event": "targets", "longs": ["ETH", "XRP", "SOL", "UNI", "NEAR"], "shorts": ["TRX", "AVAX", "ADA", "APT", "LTC"], "scores": {"BTC": -28.797, "ETH": -22.361, "SOL": -2.684, "XRP": -12.86, "DOGE": -33.461, "BNB": -29.743, "AVAX": -56.89, "LINK": -22.693, "LTC": -35.858, "ADA": -52.011, "DOT": -30.686, "NEAR": 26.727, "UNI": 18.185, "TRX": -57.016, "APT": -41.017}}
+{"ts": "2026-06-18T08:53:40.754283+00:00", "event": "order", "action": "close", "coin": "LINK", "dir": 1, "qty": 12, "side": 4, "resp": {"success": true, "code": 0, "data": 822513167249853440}}
+{"ts": "2026-06-18T08:53:41.932895+00:00", "event": "order", "action": "close", "coin": "DOGE", "dir": -1, "qty": 1, "side": 2, "resp": {"success": true, "code": 0, "data": 822513172199542784}}
+{"ts": "2026-06-18T08:53:50.024939+00:00", "event": "order", "action": "open", "coin": "ETH", "dir": 1, "qty": 1, "side": 1, "maker": true, "resp": {"success": true, "code": 0, "maker": true}}
+{"ts": "2026-06-18T08:54:13.014401+00:00", "event": "order", "action": "open", "coin": "LTC", "dir": -1, "qty": 22, "side": 3, "maker": false, "resp": {"success": true, "code": 0, "data": 822513302579039232, "maker": false}}
+{"ts": "2026-06-18T08:54:13.815784+00:00", "event": "cycle_end", "n_targets": 10}
