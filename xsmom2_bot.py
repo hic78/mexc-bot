@@ -462,25 +462,32 @@ def rebalance(client, equity0):
     log.info(f'Positions actuelles: { {c: ("L" if d>0 else "S")+str(int(v)) for c,(d,v) in cur.items()} }')
 
     # 1) FERMER ce qui n'est plus dans la cible (ou mauvais sens)
+    closed = []
     for coin, (d, vol) in cur.items():
         if coin not in targets or targets[coin] != d:
             log.info(f'➡️  Fermeture {coin} (plus dans la cible ou sens inversé)')
-            close_pos(client, coin, d, int(vol)); time.sleep(0.8)
+            close_pos(client, coin, d, int(vol)); closed.append(coin); time.sleep(0.8)
 
     # 2) OUVRIR les nouvelles cibles (pas déjà tenues dans le bon sens)
+    opened = []; kept = []
     for coin, direction in targets.items():
         if coin in cur and cur[coin][0] == direction:
-            log.debug(f'[{coin}] déjà en position {"L" if direction>0 else "S"}, on garde'); continue
+            log.debug(f'[{coin}] déjà en position {"L" if direction>0 else "S"}, on garde'); kept.append(coin); continue
         price = prices.get(coin)
         if not price: log.warning(f'[{coin}] pas de prix, skip open'); continue
         qty = calc_qty(bal, price, coin, vts)
         if qty < 1: log.warning(f'[{coin}] qty={qty} < 1, skip'); continue
-        open_pos(client, coin, direction, qty); time.sleep(0.8)
+        open_pos(client, coin, direction, qty); opened.append(coin); time.sleep(0.8)
 
     log.info('🔄 REBALANCE — fin'); log.info('═'*60)
-    jlog('cycle_end', n_targets=len(targets))
+    jlog('cycle_end', n_targets=len(targets), closed=closed, opened=opened)
     pnl = eq - equity0; longs = [c for c,d in targets.items() if d>0]; shorts = [c for c,d in targets.items() if d<0]
-    tg(f"Rebalance OK | Equity ${eq:.2f} | P&L {pnl:+.2f}$ ({(pnl/equity0*100) if equity0 else 0:+.1f}%)\n📈 {','.join(longs)}\n📉 {','.join(shorts)}")
+    # Recap EXPLICITE des changements (sinon le message ressemble pareil chaque jour)
+    if closed or opened:
+        chg = f"🔴 FERMÉ ({len(closed)}): {', '.join(closed) or '—'}\n🟢 OUVERT ({len(opened)}): {', '.join(opened) or '—'}"
+    else:
+        chg = f"⏸️ AUCUN changement — mêmes {len(kept)} positions tenues (classement momentum inchangé, c'est normal)"
+    tg(f"♻️ Rebalance | Equity ${eq:.2f} | P&L {pnl:+.2f}$ ({(pnl/equity0*100) if equity0 else 0:+.1f}%)\n{chg}\n📈 {','.join(longs)}\n📉 {','.join(shorts)}")
     return True
 
 # ===================== MAIN =====================
