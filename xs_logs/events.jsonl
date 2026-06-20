@@ -128,3 +128,8 @@
 {"ts": "2026-06-19T10:07:55.158710+00:00", "event": "cycle_start", "balance": 51.18991012344, "equity": 110.73507039, "equity0": 110.73837039}
 {"ts": "2026-06-19T10:07:59.636415+00:00", "event": "targets", "longs": ["ETH", "LINK", "SOL", "UNI", "NEAR"], "shorts": ["AVAX", "BTC", "ADA", "APT", "TRX"], "scores": {"BTC": -50.877, "ETH": -30.8, "SOL": -20.713, "XRP": -32.635, "DOGE": -42.244, "BNB": -46.614, "AVAX": -69.863, "LINK": -24.35, "LTC": -43.984, "ADA": -50.182, "DOT": -36.264, "NEAR": 22.8, "UNI": 14.926, "TRX": -48.359, "APT": -49.773}}
 {"ts": "2026-06-19T10:07:59.956468+00:00", "event": "cycle_end", "n_targets": 10, "closed": [], "opened": []}
+{"ts": "2026-06-20T10:08:09.235249+00:00", "event": "cycle_start", "balance": 51.18152819925, "equity": 110.87289847, "equity0": 110.73837039}
+{"ts": "2026-06-20T10:08:13.537011+00:00", "event": "targets", "longs": ["LINK", "ETH", "SOL", "UNI", "NEAR"], "shorts": ["AVAX", "ADA", "APT", "DOGE", "TRX"], "scores": {"BTC": -31.059, "ETH": -8.838, "SOL": 4.228, "XRP": -15.659, "DOGE": -37.172, "BNB": -22.806, "AVAX": -54.514, "LINK": -12.695, "LTC": -28.024, "ADA": -40.459, "DOT": -28.807, "NEAR": 32.453, "UNI": 16.373, "TRX": -36.056, "APT": -39.293}}
+{"ts": "2026-06-20T10:08:14.171612+00:00", "event": "order", "action": "close", "coin": "BTC", "dir": -1, "qty": 1, "side": 2, "resp": {"success": true, "code": 0, "data": 823256705864389120}}
+{"ts": "2026-06-20T10:08:29.560770+00:00", "event": "order", "action": "open", "coin": "DOGE", "dir": -1, "qty": 1, "side": 3, "maker": true, "resp": {"success": true, "code": 0, "maker": true}}
+{"ts": "2026-06-20T10:08:30.361963+00:00", "event": "cycle_end", "n_targets": 10, "closed": ["BTC"], "opened": ["DOGE"]}
