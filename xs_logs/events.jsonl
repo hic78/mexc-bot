@@ -133,3 +133,10 @@
 {"ts": "2026-06-20T10:08:14.171612+00:00", "event": "order", "action": "close", "coin": "BTC", "dir": -1, "qty": 1, "side": 2, "resp": {"success": true, "code": 0, "data": 823256705864389120}}
 {"ts": "2026-06-20T10:08:29.560770+00:00", "event": "order", "action": "open", "coin": "DOGE", "dir": -1, "qty": 1, "side": 3, "maker": true, "resp": {"success": true, "code": 0, "maker": true}}
 {"ts": "2026-06-20T10:08:30.361963+00:00", "event": "cycle_end", "n_targets": 10, "closed": ["BTC"], "opened": ["DOGE"]}
+{"ts": "2026-06-21T10:08:38.062630+00:00", "event": "cycle_start", "balance": 49.96528371715, "equity": 111.73926887, "equity0": 110.73837039}
+{"ts": "2026-06-21T10:08:42.440384+00:00", "event": "targets", "longs": ["LTC", "ETH", "SOL", "UNI", "NEAR"], "shorts": ["DOGE", "AVAX", "ADA", "TRX", "DOT"], "scores": {"BTC": -33.894, "ETH": -14.553, "SOL": 9.437, "XRP": -24.349, "DOGE": -51.763, "BNB": -31.089, "AVAX": -50.38, "LINK": -22.911, "LTC": -18.909, "ADA": -49.886, "DOT": -34.267, "NEAR": 21.882, "UNI": 14.456, "TRX": -40.035, "APT": -33.884}}
+{"ts": "2026-06-21T10:08:43.087244+00:00", "event": "order", "action": "close", "coin": "APT", "dir": -1, "qty": 150, "side": 2, "resp": {"success": true, "code": 0, "data": 823619214993916416}}
+{"ts": "2026-06-21T10:08:44.255606+00:00", "event": "order", "action": "close", "coin": "LINK", "dir": 1, "qty": 12, "side": 4, "resp": {"success": true, "code": 0, "data": 823619219915686400}}
+{"ts": "2026-06-21T10:09:06.907940+00:00", "event": "order", "action": "open", "coin": "LTC", "dir": 1, "qty": 20, "side": 1, "maker": false, "resp": {"success": true, "code": 0, "data": 823619314891473408, "maker": false}}
+{"ts": "2026-06-21T10:09:29.836620+00:00", "event": "order", "action": "open", "coin": "DOT", "dir": -1, "qty": 93, "side": 3, "maker": false, "resp": {"success": true, "code": 0, "data": 823619411071217152, "maker": false}}
+{"ts": "2026-06-21T10:09:30.638186+00:00", "event": "cycle_end", "n_targets": 10, "closed": ["APT", "LINK"], "opened": ["LTC", "DOT"]}
