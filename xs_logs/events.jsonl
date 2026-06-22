@@ -140,3 +140,10 @@
 {"ts": "2026-06-21T10:09:06.907940+00:00", "event": "order", "action": "open", "coin": "LTC", "dir": 1, "qty": 20, "side": 1, "maker": false, "resp": {"success": true, "code": 0, "data": 823619314891473408, "maker": false}}
 {"ts": "2026-06-21T10:09:29.836620+00:00", "event": "order", "action": "open", "coin": "DOT", "dir": -1, "qty": 93, "side": 3, "maker": false, "resp": {"success": true, "code": 0, "data": 823619411071217152, "maker": false}}
 {"ts": "2026-06-21T10:09:30.638186+00:00", "event": "cycle_end", "n_targets": 10, "closed": ["APT", "LINK"], "opened": ["LTC", "DOT"]}
+{"ts": "2026-06-22T10:09:48.392049+00:00", "event": "cycle_start", "balance": 50.57251170661, "equity": 110.60753232, "equity0": 110.73837039}
+{"ts": "2026-06-22T10:09:53.167002+00:00", "event": "targets", "longs": ["TRX", "ETH", "NEAR", "SOL", "UNI"], "shorts": ["ADA", "AVAX", "DOGE", "BTC", "DOT"], "scores": {"BTC": -35.979, "ETH": -12.903, "SOL": 6.816, "XRP": -32.464, "DOGE": -46.451, "BNB": -25.349, "AVAX": -51.322, "LINK": -22.726, "LTC": -19.719, "ADA": -64.141, "DOT": -35.347, "NEAR": -7.057, "UNI": 15.117, "TRX": -19.543, "APT": -29.3}}
+{"ts": "2026-06-22T10:09:53.838457+00:00", "event": "order", "action": "close", "coin": "TRX", "dir": -1, "qty": 6, "side": 2, "resp": {"success": true, "code": 0, "data": 823981899608683011}}
+{"ts": "2026-06-22T10:09:54.998302+00:00", "event": "order", "action": "close", "coin": "LTC", "dir": 1, "qty": 20, "side": 4, "resp": {"success": true, "code": 0, "data": 823981904507290112}}
+{"ts": "2026-06-22T10:10:17.860572+00:00", "event": "order", "action": "open", "coin": "TRX", "dir": 1, "qty": 3, "side": 1, "maker": false, "resp": {"success": true, "code": 0, "data": 823982000389417472, "maker": false}}
+{"ts": "2026-06-22T10:10:40.291084+00:00", "event": "order", "action": "open", "coin": "BTC", "dir": -1, "qty": 1, "side": 3, "maker": true, "resp": {"success": true, "code": 0, "maker": true}}
+{"ts": "2026-06-22T10:10:41.093505+00:00", "event": "cycle_end", "n_targets": 10, "closed": ["TRX", "LTC"], "opened": ["TRX", "BTC"]}
