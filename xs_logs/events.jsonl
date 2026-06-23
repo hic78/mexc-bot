@@ -147,3 +147,10 @@
 {"ts": "2026-06-22T10:10:17.860572+00:00", "event": "order", "action": "open", "coin": "TRX", "dir": 1, "qty": 3, "side": 1, "maker": false, "resp": {"success": true, "code": 0, "data": 823982000389417472, "maker": false}}
 {"ts": "2026-06-22T10:10:40.291084+00:00", "event": "order", "action": "open", "coin": "BTC", "dir": -1, "qty": 1, "side": 3, "maker": true, "resp": {"success": true, "code": 0, "maker": true}}
 {"ts": "2026-06-22T10:10:41.093505+00:00", "event": "cycle_end", "n_targets": 10, "closed": ["TRX", "LTC"], "opened": ["TRX", "BTC"]}
+{"ts": "2026-06-23T10:10:54.871147+00:00", "event": "cycle_start", "balance": 55.03864640133, "equity": 108.95185433, "equity0": 110.73837039}
+{"ts": "2026-06-23T10:10:59.661346+00:00", "event": "targets", "longs": ["LTC", "NEAR", "SOL", "TRX", "UNI"], "shorts": ["ADA", "DOGE", "DOT", "XRP", "BTC"], "scores": {"BTC": -61.039, "ETH": -56.468, "SOL": -34.244, "XRP": -66.028, "DOGE": -81.536, "BNB": -55.332, "AVAX": -59.709, "LINK": -55.018, "LTC": -46.419, "ADA": -89.32, "DOT": -67.26, "NEAR": -36.294, "UNI": -5.321, "TRX": -14.37, "APT": -49.407}}
+{"ts": "2026-06-23T10:11:00.324782+00:00", "event": "order", "action": "close", "coin": "ETH", "dir": 1, "qty": 1, "side": 4, "resp": {"success": true, "code": 0, "data": 824344566328029696}}
+{"ts": "2026-06-23T10:11:01.503789+00:00", "event": "order", "action": "close", "coin": "AVAX", "dir": -1, "qty": 15, "side": 2, "resp": {"success": true, "code": 0, "data": 824344571227286528}}
+{"ts": "2026-06-23T10:11:24.714804+00:00", "event": "order", "action": "open", "coin": "LTC", "dir": 1, "qty": 23, "side": 1, "maker": false, "resp": {"success": true, "code": 0, "data": 824344668580990464, "maker": false}}
+{"ts": "2026-06-23T10:11:48.482177+00:00", "event": "order", "action": "open", "coin": "XRP", "dir": -1, "qty": 9, "side": 3, "maker": false, "resp": {"success": true, "code": 0, "data": 824344768321556480, "maker": false}}
+{"ts": "2026-06-23T10:11:49.283469+00:00", "event": "cycle_end", "n_targets": 10, "closed": ["ETH", "AVAX"], "opened": ["LTC", "XRP"]}
