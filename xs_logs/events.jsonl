@@ -154,3 +154,10 @@
 {"ts": "2026-06-23T10:11:24.714804+00:00", "event": "order", "action": "open", "coin": "LTC", "dir": 1, "qty": 23, "side": 1, "maker": false, "resp": {"success": true, "code": 0, "data": 824344668580990464, "maker": false}}
 {"ts": "2026-06-23T10:11:48.482177+00:00", "event": "order", "action": "open", "coin": "XRP", "dir": -1, "qty": 9, "side": 3, "maker": false, "resp": {"success": true, "code": 0, "data": 824344768321556480, "maker": false}}
 {"ts": "2026-06-23T10:11:49.283469+00:00", "event": "cycle_end", "n_targets": 10, "closed": ["ETH", "AVAX"], "opened": ["LTC", "XRP"]}
+{"ts": "2026-06-24T10:12:24.428064+00:00", "event": "cycle_start", "balance": 58.40917541217, "equity": 108.73863934, "equity0": 110.73837039}
+{"ts": "2026-06-24T10:12:29.158940+00:00", "event": "targets", "longs": ["APT", "NEAR", "SOL", "TRX", "UNI"], "shorts": ["ADA", "DOGE", "DOT", "XRP", "LTC"], "scores": {"BTC": -49.072, "ETH": -46.142, "SOL": -21.562, "XRP": -57.564, "DOGE": -74.643, "BNB": -41.456, "AVAX": -46.045, "LINK": -45.909, "LTC": -57.432, "ADA": -82.071, "DOT": -60.859, "NEAR": -36.138, "UNI": -12.721, "TRX": -18.824, "APT": -39.402}}
+{"ts": "2026-06-24T10:12:29.827274+00:00", "event": "order", "action": "close", "coin": "LTC", "dir": 1, "qty": 23, "side": 4, "resp": {"success": true, "code": 0, "data": 824707329625804800}}
+{"ts": "2026-06-24T10:12:31.004590+00:00", "event": "order", "action": "close", "coin": "BTC", "dir": -1, "qty": 1, "side": 2, "resp": {"success": true, "code": 0, "data": 824707334596021248}}
+{"ts": "2026-06-24T10:12:54.171889+00:00", "event": "order", "action": "open", "coin": "APT", "dir": 1, "qty": 164, "side": 1, "maker": false, "resp": {"success": true, "code": 0, "data": 824707431776256512, "maker": false}}
+{"ts": "2026-06-24T10:13:16.645727+00:00", "event": "order", "action": "open", "coin": "LTC", "dir": -1, "qty": 25, "side": 3, "maker": true, "resp": {"success": true, "code": 0, "maker": true}}
+{"ts": "2026-06-24T10:13:17.447923+00:00", "event": "cycle_end", "n_targets": 10, "closed": ["LTC", "BTC"], "opened": ["APT", "LTC"]}
