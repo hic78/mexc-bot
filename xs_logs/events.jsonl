@@ -161,3 +161,10 @@
 {"ts": "2026-06-24T10:12:54.171889+00:00", "event": "order", "action": "open", "coin": "APT", "dir": 1, "qty": 164, "side": 1, "maker": false, "resp": {"success": true, "code": 0, "data": 824707431776256512, "maker": false}}
 {"ts": "2026-06-24T10:13:16.645727+00:00", "event": "order", "action": "open", "coin": "LTC", "dir": -1, "qty": 25, "side": 3, "maker": true, "resp": {"success": true, "code": 0, "maker": true}}
 {"ts": "2026-06-24T10:13:17.447923+00:00", "event": "cycle_end", "n_targets": 10, "closed": ["LTC", "BTC"], "opened": ["APT", "LTC"]}
+{"ts": "2026-06-25T10:13:36.258510+00:00", "event": "cycle_start", "balance": 55.90807257677, "equity": 109.11708219, "equity0": 110.73837039}
+{"ts": "2026-06-25T10:13:40.929487+00:00", "event": "targets", "longs": ["APT", "AVAX", "TRX", "SOL", "UNI"], "shorts": ["ADA", "DOGE", "DOT", "XRP", "BTC"], "scores": {"BTC": -55.287, "ETH": -47.002, "SOL": -23.961, "XRP": -62.381, "DOGE": -76.196, "BNB": -48.972, "AVAX": -37.731, "LINK": -49.815, "LTC": -48.289, "ADA": -82.875, "DOT": -64.31, "NEAR": -42.317, "UNI": 0.669, "TRX": -31.744, "APT": -40.201}}
+{"ts": "2026-06-25T10:13:41.592722+00:00", "event": "order", "action": "close", "coin": "NEAR", "dir": 1, "qty": 9, "side": 4, "resp": {"success": true, "code": 0, "data": 825070018508597760}}
+{"ts": "2026-06-25T10:13:42.794950+00:00", "event": "order", "action": "close", "coin": "LTC", "dir": -1, "qty": 25, "side": 2, "resp": {"success": true, "code": 0, "data": 825070023545569792}}
+{"ts": "2026-06-25T10:13:58.296196+00:00", "event": "order", "action": "open", "coin": "AVAX", "dir": 1, "qty": 15, "side": 1, "maker": true, "resp": {"success": true, "code": 0, "maker": true}}
+{"ts": "2026-06-25T10:14:20.762833+00:00", "event": "order", "action": "open", "coin": "BTC", "dir": -1, "qty": 2, "side": 3, "maker": true, "resp": {"success": true, "code": 0, "maker": true}}
+{"ts": "2026-06-25T10:14:21.563824+00:00", "event": "cycle_end", "n_targets": 10, "closed": ["NEAR", "LTC"], "opened": ["AVAX", "BTC"]}
