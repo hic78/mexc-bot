@@ -168,3 +168,12 @@
 {"ts": "2026-06-25T10:13:58.296196+00:00", "event": "order", "action": "open", "coin": "AVAX", "dir": 1, "qty": 15, "side": 1, "maker": true, "resp": {"success": true, "code": 0, "maker": true}}
 {"ts": "2026-06-25T10:14:20.762833+00:00", "event": "order", "action": "open", "coin": "BTC", "dir": -1, "qty": 2, "side": 3, "maker": true, "resp": {"success": true, "code": 0, "maker": true}}
 {"ts": "2026-06-25T10:14:21.563824+00:00", "event": "cycle_end", "n_targets": 10, "closed": ["NEAR", "LTC"], "opened": ["AVAX", "BTC"]}
+{"ts": "2026-06-26T10:14:47.913428+00:00", "event": "cycle_start", "balance": 58.20671877197, "equity": 109.21380323, "equity0": 110.73837039}
+{"ts": "2026-06-26T10:14:52.282997+00:00", "event": "targets", "longs": ["LTC", "BNB", "AVAX", "SOL", "UNI"], "shorts": ["ADA", "DOGE", "DOT", "XRP", "ETH"], "scores": {"BTC": -49.804, "ETH": -53.188, "SOL": -14.843, "XRP": -58.243, "DOGE": -65.832, "BNB": -38.973, "AVAX": -37.522, "LINK": -51.406, "LTC": -40.02, "ADA": -70.188, "DOT": -63.311, "NEAR": -51.815, "UNI": -4.82, "TRX": -42.616, "APT": -46.676}}
+{"ts": "2026-06-26T10:14:52.944910+00:00", "event": "order", "action": "close", "coin": "BTC", "dir": -1, "qty": 2, "side": 2, "resp": {"success": true, "code": 0, "data": 825432705612205568}}
+{"ts": "2026-06-26T10:14:54.123480+00:00", "event": "order", "action": "close", "coin": "APT", "dir": 1, "qty": 164, "side": 4, "resp": {"success": true, "code": 0, "data": 825432710547112449}}
+{"ts": "2026-06-26T10:14:55.293138+00:00", "event": "order", "action": "close", "coin": "TRX", "dir": 1, "qty": 3, "side": 4, "resp": {"success": true, "code": 0, "data": 825432715473382912}}
+{"ts": "2026-06-26T10:15:18.243483+00:00", "event": "order", "action": "open", "coin": "LTC", "dir": 1, "qty": 25, "side": 1, "maker": false, "resp": {"success": true, "code": 0, "data": 825432811753292288, "maker": false}}
+{"ts": "2026-06-26T10:15:41.902684+00:00", "event": "order", "action": "open", "coin": "BNB", "dir": 1, "qty": 2, "side": 1, "maker": false, "resp": {"success": true, "code": 0, "data": 825432910982393344, "maker": false}}
+{"ts": "2026-06-26T10:16:05.327678+00:00", "event": "order", "action": "open", "coin": "ETH", "dir": -1, "qty": 1, "side": 3, "maker": false, "resp": {"success": true, "code": 0, "data": 825433009091080704, "maker": false}}
+{"ts": "2026-06-26T10:16:06.131376+00:00", "event": "cycle_end", "n_targets": 10, "closed": ["BTC", "APT", "TRX"], "opened": ["LTC", "BNB", "ETH"]}
