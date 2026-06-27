@@ -27,22 +27,24 @@ from mexc_client import MEXCRestClient
 from config import to_mexc_symbol, get_contract_size, init_contract_sizes, get_price_decimals
 
 # ===================== CONFIG (indépendante de l'ancien bot) =====================
-UNIVERSE   = os.getenv('XS_UNIVERSE', 'BTC,ETH,SOL,XRP,DOGE,BNB,AVAX,LINK,LTC,ADA,DOT,NEAR,UNI,TRX,APT').split(',')
-Q          = int(os.getenv('XS_Q', '5'))             # top/bottom Q (2Q positions au total)
+# CHAMPION VALIDÉ 2026-06-27 : 23 coins MEXC ultra-liquides (>5M vol24h), horizons LENTS, q4, 48h, VT0.34
+# Backtest réaliste (frais 0.30% RT): Sharpe FULL 1.93 / OOS 2.36 / +95%/an / MDD 27% / WFE 1.39 (anti-overfit OK)
+UNIVERSE   = os.getenv('XS_UNIVERSE', 'BTC,SOL,ETH,XRP,PEPE,ZEC,SUI,AAVE,DOGE,WLD,ENA,NEAR,AVAX,LINK,INJ,WIF,ADA,TIA,SEI,LTC,BNB,FET,BCH').split(',')
+Q          = int(os.getenv('XS_Q', '4'))             # top/bottom Q (2Q positions au total) — champion=4
 LEVERAGE   = int(os.getenv('XS_LEV', '2'))           # levier
-MARGIN_PCT = float(os.getenv('XS_MARGIN_PCT', '0.09'))  # marge par position (10 pos × 9% = 90% déployé)
-HORIZONS   = [168, 336, 720]                          # heures (1sem/2sem/1mois)
-VOL_WIN    = 168                                      # fenêtre vol (heures)
-REBAL_H    = int(os.getenv('XS_REBAL_H', '24'))       # rebalance toutes les 24h
+MARGIN_PCT = float(os.getenv('XS_MARGIN_PCT', '0.11'))  # marge par position (8 pos × 11% ≈ 88% déployé)
+HORIZONS   = [336, 504, 1440]                         # heures LENTS (2sem/3sem/2mois) — champion validé
+VOL_WIN    = 120                                      # fenêtre vol (heures) — champion=120
+REBAL_H    = int(os.getenv('XS_REBAL_H', '48'))       # rebalance toutes les 48h — champion (moins de frais)
 KILL_DD    = float(os.getenv('XS_KILL_DD', '0.15'))   # kill-switch -15%
-VT_TARGET  = 0.40                                      # vol cible annualisée (= backtest)
+VT_TARGET  = 0.34                                      # vol cible annualisée — champion validé
 VT_MIN     = float(os.getenv('XS_VT_MIN', '0.40'))    # backtest=0.2 mais sous le min MEXC sur $110 → 0.4
 VT_MAX     = float(os.getenv('XS_VT_MAX', '1.00'))    # backtest=3.0 mais sur-déploierait le compte → 1.0
 DRY_RUN    = os.getenv('XS_DRY_RUN', '1') != '0'      # défaut ON (sécurité)
 USE_MAKER  = os.getenv('XS_MAKER', '1') != '0'        # exécution MAKER (post-only limit) au lieu de market
 MAKER_CHASE= int(os.getenv('XS_MAKER_CHASE', '3'))    # nb de re-post si pas rempli, puis fallback taker
 MAKER_WAIT = int(os.getenv('XS_MAKER_WAIT', '6'))     # secondes d'attente de fill par essai
-KLINES     = 800                                      # >720+vol
+KLINES     = 1700                                     # >1440(maxH)+120(volwin) — MEXC accepte jusqu'à 2000/req
 INTERVAL   = 'Min60'
 
 LOG_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'xs_logs')

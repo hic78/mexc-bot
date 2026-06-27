@@ -182,3 +182,39 @@
 {"ts": "2026-06-27T10:16:25.617148+00:00", "event": "order", "action": "close", "coin": "ETH", "dir": -1, "qty": 1, "side": 2, "resp": {"success": true, "code": 0, "data": 825795482080078848}}
 {"ts": "2026-06-27T10:16:48.662862+00:00", "event": "order", "action": "open", "coin": "NEAR", "dir": -1, "qty": 6, "side": 3, "maker": false, "resp": {"success": true, "code": 0, "data": 825795578889220608, "maker": false}}
 {"ts": "2026-06-27T10:16:49.463886+00:00", "event": "cycle_end", "n_targets": 10, "closed": ["ETH"], "opened": ["NEAR"]}
+{"ts": "2026-06-27T18:40:37.622260+00:00", "event": "boot", "equity0": 109.28256021, "dry_run": true, "lev": 2, "q": 4, "universe": ["BTC", "SOL", "ETH", "XRP", "PEPE", "ZEC", "SUI", "AAVE", "DOGE", "WLD", "ENA", "NEAR", "AVAX", "LINK", "INJ", "WIF", "ADA", "TIA", "SEI", "LTC", "BNB", "FET", "BCH"]}
+{"ts": "2026-06-27T18:40:38.161928+00:00", "event": "cycle_start", "balance": 57.28371691967, "equity": 109.28256021, "equity0": 109.28256021}
+{"ts": "2026-06-27T18:40:45.753113+00:00", "event": "targets", "longs": ["ZEC", "NEAR", "AAVE", "WLD"], "shorts": ["BCH", "PEPE", "ADA", "DOGE"], "scores": {"BTC": -35.168, "SOL": 8.568, "ETH": -36.778, "XRP": -40.703, "PEPE": -59.035, "ZEC": 25.597, "SUI": -30.814, "AAVE": 61.408, "DOGE": -46.841, "WLD": 63.413, "ENA": -41.194, "NEAR": 31.471, "AVAX": -27.332, "LINK": -30.11, "INJ": 18.961, "WIF": 15.284, "ADA": -58.152, "TIA": 24.924, "SEI": -11.425, "LTC": -25.775, "BNB": -28.39, "FET": -27.038, "BCH": -64.421}}
+{"ts": "2026-06-27T18:40:46.044533+00:00", "event": "order_dry", "action": "close", "coin": "BNB", "dir": 1, "qty": 2, "side": 4}
+{"ts": "2026-06-27T18:40:46.845462+00:00", "event": "order_dry", "action": "close", "coin": "NEAR", "dir": -1, "qty": 6, "side": 2}
+{"ts": "2026-06-27T18:40:47.648128+00:00", "event": "order_dry", "action": "close", "coin": "LTC", "dir": 1, "qty": 25, "side": 4}
+{"ts": "2026-06-27T18:40:48.449098+00:00", "event": "order_dry", "action": "close", "coin": "XRP", "dir": -1, "qty": 9, "side": 2}
+{"ts": "2026-06-27T18:40:49.249985+00:00", "event": "order_dry", "action": "close", "coin": "AVAX", "dir": 1, "qty": 15, "side": 4}
+{"ts": "2026-06-27T18:40:50.051204+00:00", "event": "order_dry", "action": "close", "coin": "UNI", "dir": 1, "qty": 31, "side": 4}
+{"ts": "2026-06-27T18:40:50.852360+00:00", "event": "order_dry", "action": "close", "coin": "DOT", "dir": -1, "qty": 93, "side": 2}
+{"ts": "2026-06-27T18:40:51.653605+00:00", "event": "order_dry", "action": "close", "coin": "SOL", "dir": 1, "qty": 1, "side": 4}
+{"ts": "2026-06-27T18:40:52.454742+00:00", "event": "order_dry", "action": "open", "coin": "ZEC", "dir": 1, "qty": 3, "side": 1}
+{"ts": "2026-06-27T18:40:53.255709+00:00", "event": "order_dry", "action": "open", "coin": "NEAR", "dir": 1, "qty": 7, "side": 1}
+{"ts": "2026-06-27T18:40:54.056679+00:00", "event": "order_dry", "action": "open", "coin": "AAVE", "dir": 1, "qty": 13, "side": 1}
+{"ts": "2026-06-27T18:40:54.857958+00:00", "event": "order_dry", "action": "open", "coin": "WLD", "dir": 1, "qty": 27, "side": 1}
+{"ts": "2026-06-27T18:40:55.658960+00:00", "event": "order_dry", "action": "open", "coin": "BCH", "dir": -1, "qty": 6, "side": 3}
+{"ts": "2026-06-27T18:40:56.460943+00:00", "event": "order_dry", "action": "open", "coin": "PEPE", "dir": -1, "qty": 1, "side": 3}
+{"ts": "2026-06-27T18:40:57.262130+00:00", "event": "cycle_end", "n_targets": 8, "closed": ["BNB", "NEAR", "LTC", "XRP", "AVAX", "UNI", "DOT", "SOL"], "opened": ["ZEC", "NEAR", "AAVE", "WLD", "BCH", "PEPE"]}
+{"ts": "2026-06-27T18:41:45.359100+00:00", "event": "boot", "equity0": 109.27736021, "dry_run": false, "lev": 2, "q": 4, "universe": ["BTC", "SOL", "ETH", "XRP", "PEPE", "ZEC", "SUI", "AAVE", "DOGE", "WLD", "ENA", "NEAR", "AVAX", "LINK", "INJ", "WIF", "ADA", "TIA", "SEI", "LTC", "BNB", "FET", "BCH"]}
+{"ts": "2026-06-27T18:41:46.105863+00:00", "event": "cycle_start", "balance": 57.28371691967, "equity": 109.28146021, "equity0": 109.27736021}
+{"ts": "2026-06-27T18:41:53.346859+00:00", "event": "targets", "longs": ["ZEC", "NEAR", "AAVE", "WLD"], "shorts": ["BCH", "PEPE", "ADA", "DOGE"], "scores": {"BTC": -35.168, "SOL": 8.568, "ETH": -36.778, "XRP": -40.703, "PEPE": -59.035, "ZEC": 25.597, "SUI": -30.814, "AAVE": 61.408, "DOGE": -46.841, "WLD": 63.413, "ENA": -41.194, "NEAR": 31.471, "AVAX": -27.332, "LINK": -30.11, "INJ": 18.961, "WIF": 15.284, "ADA": -58.152, "TIA": 24.924, "SEI": -11.425, "LTC": -25.775, "BNB": -28.39, "FET": -27.038, "BCH": -64.421}}
+{"ts": "2026-06-27T18:41:54.005035+00:00", "event": "order", "action": "close", "coin": "BNB", "dir": 1, "qty": 2, "side": 4, "resp": {"success": true, "code": 0, "data": 825922688584624640}}
+{"ts": "2026-06-27T18:41:55.182265+00:00", "event": "order", "action": "close", "coin": "NEAR", "dir": -1, "qty": 6, "side": 2, "resp": {"success": true, "code": 0, "data": 825922693567589888}}
+{"ts": "2026-06-27T18:41:56.349466+00:00", "event": "order", "action": "close", "coin": "LTC", "dir": 1, "qty": 25, "side": 4, "resp": {"success": true, "code": 0, "data": 825922698491317248}}
+{"ts": "2026-06-27T18:41:57.507504+00:00", "event": "order", "action": "close", "coin": "XRP", "dir": -1, "qty": 9, "side": 2, "resp": {"success": true, "code": 0, "data": 825922703377698816}}
+{"ts": "2026-06-27T18:41:58.674358+00:00", "event": "order", "action": "close", "coin": "AVAX", "dir": 1, "qty": 15, "side": 4, "resp": {"success": true, "code": 0, "data": 825922708272721408}}
+{"ts": "2026-06-27T18:41:59.833269+00:00", "event": "order", "action": "close", "coin": "UNI", "dir": 1, "qty": 31, "side": 4, "resp": {"success": true, "code": 0, "data": 825922713142299136}}
+{"ts": "2026-06-27T18:42:01.004009+00:00", "event": "order", "action": "close", "coin": "DOT", "dir": -1, "qty": 93, "side": 2, "resp": {"success": true, "code": 0, "data": 825922718020153344}}
+{"ts": "2026-06-27T18:42:02.215986+00:00", "event": "order", "action": "close", "coin": "SOL", "dir": 1, "qty": 1, "side": 4, "resp": {"success": true, "code": 0, "data": 825922723019911168}}
+{"ts": "2026-06-27T18:42:24.471409+00:00", "event": "order", "action": "open", "coin": "ZEC", "dir": 1, "qty": 3, "side": 1, "maker": true, "resp": {"success": true, "code": 0, "maker": true}}
+{"ts": "2026-06-27T18:42:47.325183+00:00", "event": "order", "action": "open", "coin": "NEAR", "dir": 1, "qty": 7, "side": 1, "maker": false, "resp": {"success": true, "code": 0, "data": 825922912321511936, "maker": false}}
+{"ts": "2026-06-27T18:42:55.523533+00:00", "event": "order", "action": "open", "coin": "AAVE", "dir": 1, "qty": 13, "side": 1, "maker": true, "resp": {"success": true, "code": 0, "maker": true}}
+{"ts": "2026-06-27T18:43:18.401434+00:00", "event": "order", "action": "open", "coin": "WLD", "dir": 1, "qty": 27, "side": 1, "maker": false, "resp": {"success": true, "code": 0, "data": 825923042679493120, "maker": false}}
+{"ts": "2026-06-27T18:43:41.208081+00:00", "event": "order", "action": "open", "coin": "BCH", "dir": -1, "qty": 6, "side": 3, "maker": false, "resp": {"success": true, "code": 0, "data": 825923138335386112, "maker": false}}
+{"ts": "2026-06-27T18:44:04.031645+00:00", "event": "order", "action": "open", "coin": "PEPE", "dir": -1, "qty": 1, "side": 3, "maker": false, "resp": {"success": true, "code": 0, "data": 825923234073412096, "maker": false}}
+{"ts": "2026-06-27T18:44:04.832788+00:00", "event": "cycle_end", "n_targets": 8, "closed": ["BNB", "NEAR", "LTC", "XRP", "AVAX", "UNI", "DOT", "SOL"], "opened": ["ZEC", "NEAR", "AAVE", "WLD", "BCH", "PEPE"]}
