@@ -249,3 +249,8 @@
 {"ts": "2026-07-05T04:36:23.228450+00:00", "event": "order", "action": "open", "coin": "FET", "dir": -1, "qty": 6, "side": 3, "maker": false, "resp": {"success": true, "code": 0, "data": 828609011319835648, "maker": false}}
 {"ts": "2026-07-05T04:36:45.972568+00:00", "event": "order", "action": "open", "coin": "ENA", "dir": -1, "qty": 15, "side": 3, "maker": false, "resp": {"success": true, "code": 0, "data": 828609106700292679, "maker": false}}
 {"ts": "2026-07-05T04:36:46.773795+00:00", "event": "cycle_end", "n_targets": 8, "closed": ["PEPE", "WLD", "XRP"], "opened": ["TIA", "FET", "ENA"]}
+{"ts": "2026-07-07T04:37:10.239489+00:00", "event": "cycle_start", "balance": 53.52366723873, "equity": 101.72705171, "equity0": 105.49175673}
+{"ts": "2026-07-07T04:37:17.989177+00:00", "event": "targets", "longs": ["INJ", "NEAR", "SOL", "AAVE"], "shorts": ["DOGE", "ENA", "FET", "BTC"], "scores": {"BTC": -64.924, "SOL": 24.668, "ETH": -38.576, "XRP": -48.679, "PEPE": -54.66, "ZEC": -42.04, "SUI": -48.272, "AAVE": 58.422, "DOGE": -97.052, "WLD": -8.97, "ENA": -80.032, "NEAR": 22.442, "AVAX": -39.731, "LINK": -46.049, "INJ": 4.43, "WIF": -26.177, "ADA": -15.515, "TIA": -13.022, "SEI": -48.644, "LTC": -50.949, "BNB": -44.528, "FET": -76.245, "BCH": -25.145}}
+{"ts": "2026-07-07T04:37:18.645756+00:00", "event": "order", "action": "close", "coin": "TIA", "dir": 1, "qty": 29, "side": 4, "resp": {"success": true, "code": 0, "data": 829334019433603584}}
+{"ts": "2026-07-07T04:37:34.108576+00:00", "event": "order", "action": "open", "coin": "INJ", "dir": 1, "qty": 2, "side": 1, "maker": true, "resp": {"success": true, "code": 0, "maker": true}}
+{"ts": "2026-07-07T04:37:34.920266+00:00", "event": "cycle_end", "n_targets": 8, "closed": ["TIA"], "opened": ["INJ"]}
